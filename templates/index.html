@@ -3,102 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cyber Shield - Web Analyzer</title>
-    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
-    <link rel="stylesheet" href="/static/style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@300;400;700&display=swap" rel="stylesheet">
+    <title>Cyber Shield</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="background-effects"></div>
-    <header class="main-header">
-        <div class="header-left">
-            <h1 class="project-title glitch" data-text="CYBER SHIELD">CYBER SHIELD</h1>
-            <p class="project-tagline">//: Hệ thống phân tích tin nhắn và phát hiện dấu hiệu nguy hiểm bởi AI</p>
-            <p class="project-intro">
-                Phát triển bởi <a href="https://github.com/duong-x-u" target="_blank">Phạm Thái Dương</a> (DươngPT NKers) - THPT Nguyễn Khuyến Bà Rịa - Vũng Tàu - Thành phố Hồ Chí Minh.<br>
-                Dự án tham gia cuộc thi KHKT cấp Thành phố.
-            </p>
-        </div>
-        <div class="header-right">
-            <a href="https://www.facebook.com/profile.php?id=61581026585830" target="_blank" class="social-link" title="Facebook Dự án">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M16 8.049c0-4.446-3.582-8.05-8-8.05C3.58 0-.002 3.603-.002 8.05c0 4.017 2.926 7.347 6.75 7.951v-5.625h-2.03V8.05H6.75V6.275c0-2.017 1.195-3.131 3.022-3.131.876 0 1.791.157 1.791.157v1.98h-1.009c-.993 0-1.303.621-1.303 1.258v1.51h2.218l-.354 2.326H9.25V16c3.824-.604 6.75-3.934 6.75-7.951z"/>
-                </svg>
-            </a>
-            <a href="https://github.com/duong-x-u" target="_blank" class="social-link" title="GitHub Admin">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38C13.71 14.53 16 11.54 16 8c0-4.42-3.58-8-8-8z"/>
-                </svg>
-            </a>
-        </div>
-    </header>
-
-    <div class="terminal-container">
-        <!-- PHẦN 1: KHUNG NHẬP LIỆU -->
-        <div class="input-pane">
-            <header>
-                <h1 class="glitch" data-text="INPUT STREAM">INPUT STREAM</h1>
-                <p>//: Nhập hoặc dán tín hiệu cần phân tích.</p>
-            </header>
-            <div class="textarea-wrapper">
-                <textarea id="text-input" placeholder="Khởi tạo luồng dữ liệu... //_" maxlength="10000"></textarea>
-                <div id="char-counter">0 / 10000</div>
+    <div class="wrap">
+        <!-- Header    -->
+        <div class="hdr">
+            <div class="hdr-left">
+                <div class="logo-box">
+                    <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+                </div>
+                <div>
+                    <div class="logo-title">CYBER<span>SHIELD</span></div>
+                    <div class="logo-sub">// AI MESSAGE SENTINEL</div>
+                </div>
+            </div>
+            <div class="hdr-right">
+                <!--<div class="status-pill"><div class="pulse"></div>ONLINE</div> -->
+                <div class="social-btn"><i class="fab fa-facebook-f"></i></div>
+                <div class="social-btn"><i class="fab fa-github"></i></div>
             </div>
         </div>
 
-        <!-- PHẦN 2: BẢNG ĐIỀU KHIỂN -->
-        <div class="controls-pane">
-            <button id="analyze-btn" class="btn primary" title="Bắt đầu phân tích">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-shield-check" viewBox="0 0 16 16"><path d="M5.338 1.59a61.44 61.44 0 0 0-2.837.856.481.481 0 0 0-.328.39c-.554 4.157.726 7.19 2.253 9.188a10.725 10.725 0 0 0 2.287 2.233c.346.244.652.42.893.533.12.057.218.095.293.118a.55.55 0 0 0 .101.025.615.615 0 0 0 .1-.025c.076-.023.174-.06.294-.118.24-.113.547-.29.893-.533a10.726 10.726 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.95-.325-1.922-.6-2.837-.855A1.117 1.117 0 0 0 8 1.5a1.117 1.117 0 0 0-2.662.09zM10.854 6.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 8.793l2.646-2.647a.5.5 0 0 1 .708 0z"/></svg>
-                <span>Phân Tích</span>
-            </button>
-            <button id="paste-btn" class="btn" title="Dán từ clipboard">
-                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/></svg>
-            </button>
-            <button id="clear-btn" class="btn danger" title="Xóa toàn bộ">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
-            </button>
+        <!-- Tagline Strip -->
+        <div class="tagline-strip">
+            <div class="scrolling-text">
+                <span>Hệ thống phân tích tin nhắn và phát hiện nguy hiểm bởi AI · Phạm Thái Dương (DươngPT NKers) · THPT Nguyễn Khuyến Bà Rịa - Vũng Tàu · TP.HCM</span>
+            </div>
+            <span class="competition-tag">Cuộc thi Sáng tạo Thanh thiếu niên Nhi đồng TPHCM 2026</span>
         </div>
 
-        <!-- PHẦN 3: KHUNG KẾT QUẢ -->
-        <div class="results-pane">
-             <header>
-                <h1 class="glitch" data-text="ANALYSIS">ANALYSIS</h1>
-                <p>//: Kết quả trả về từ Anna-AI.</p>
-            </header>
-            <div id="result-card-container">
-                <div id="result-card" class="result-card-standby">
-                    <div class="standby-content">
-                        <span class="loading-dot"></span>
-                        <span class="loading-dot"></span>
-                        <span class="loading-dot"></span>
-                        <p>AWAITING TRANSMISSION...</p>
-                        <p>//: Hệ thống sẵn sàng phân tích dữ liệu.</p>
+        <!-- Main Interface -->
+        <div class="main">
+            <!-- Left Pane: Input -->
+            <div class="pane">
+                <div class="pane-top">
+                    <div class="pane-title">DỮ LIỆU ĐẦU VÀO</div>
+                    <div class="pane-sub">//: Nhập nội dung cần phân tích.</div>
+                </div>
+                <textarea class="ta" id="ta" placeholder="Khởi tạo luồng dữ liệu... //_" oninput="updateCounter()"></textarea>
+                <div class="counter" id="ctr">0 / 10000</div>
+                
+                <div class="url-input-wrap" style="margin-top: 15px;">
+                    <div class="pane-sub">//: URL đính kèm (tùy chọn).</div>
+                    <input type="text" id="url-ta" class="url-ta" placeholder="http://example.com...">
+                </div>
+            </div>
+
+            <!-- Middle Pane: Controls -->
+            <div class="pane ctrl-pane">
+                <button class="btn-scan" id="scanBtn" onclick="analyze()">
+                    <div class="btn-scan-inner">
+                        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+                        <span class="btn-scan-text">PHÂN TÍCH</span>
                     </div>
-                    <!-- Nội dung kết quả sẽ được JS chèn vào đây -->
+                </button>
+                <div class="divider"></div>
+                <button class="btn-small btn-paste" onclick="pasteText()">
+                    <i class="fas fa-paste"></i> PASTE
+                </button>
+                <button class="btn-small btn-clear" onclick="clearAll()">
+                    <i class="fas fa-trash-alt"></i> CLEAR
+                </button>
+            </div>
+
+            <!-- Right Pane: Analysis -->
+            <div class="pane">
+                <div class="pane-top">
+                    <div class="pane-title">KẾT QUẢ</div>
+                    <div class="pane-sub">//: Kết quả phân tích từ AI.</div>
+                </div>
+                
+                <!-- Idle State -->
+                <div class="result-box" id="r-idle">
+                    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+                    <div class="await-text">AWAITING TRANSMISSION...<br>//: Hệ thống sẵn sàng phân tích.</div>
+                </div>
+
+                <!-- Loading State -->
+                <div class="result-box" id="r-loading" style="display:none">
+                    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+                    <div class="await-text">ANALYZING SIGNALS...<br>//: Đang giải mã dữ liệu...</div>
+                </div>
+
+                <!-- Safe State -->
+                <div class="result-box result-safe res-fill" id="r-safe" style="display:none">
+                    <div class="rs safe-c">✓ TÍN HIỆU AN TOÀN</div>
+                    <div class="sbadge bs" id="safe-score">SCORE: 1 / 5</div>
+                    <div class="rlist">
+                        <div><span class="lbl">//:Lý do:</span> <span id="safe-reason"></span></div>
+                        <div><span class="lbl">//:Khuyến cáo:</span> <span id="safe-recommend"></span></div>
+                        <div><span class="lbl">//:Phân loại:</span> <span id="safe-types"></span></div>
+                    </div>
+                </div>
+
+                <!-- Danger State -->
+                <div class="result-box result-danger res-fill" id="r-danger" style="display:none">
+                    <div class="rs danger-c">⚠ CẢNH BÁO NGUY HIỂM</div>
+                    <div class="sbadge bd" id="danger-score">THREAT: 5 / 5</div>
+                    <div class="rlist">
+                        <div><span class="lbl">//:Lý do:</span> <span id="danger-reason"></span></div>
+                        <div><span class="lbl">//:Khuyến cáo:</span> <span id="danger-recommend"></span></div>
+                        <div><span class="lbl">//:Phân loại:</span> <span id="danger-types"></span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="ftr">
+            <div class="ftr-l">
+                <div class="author"> SEPA Studio <span style="color:var(--accent);font-size:.7rem">(SEPA Cyber Shield)</span></div>
+                <div class="school">THPT Nguyễn Khuyến Bà Rịa - Vũng Tàu · TP. Hồ Chí Minh</div>
+            </div>
+            <div class="ftr-r">
+                <div class="ftr-copy">© 2026 CYBER SHIELD</div>
+                <div class="ftr-soc">
+                    <!--<div class="fsoc"><i class="fab fa-facebook-f"></i></div>
+                    <div class="fsoc"><i class="fab fa-github"></i></div> -->
                 </div>
             </div>
         </div>
     </div>
-
-    <footer class="main-footer">
-        <p>&copy; 2025 Cyber Shield. All rights reserved.</p>
-        <div class="footer-social-links">
-             <a href="https://www.facebook.com/profile.php?id=61581026585830" target="_blank" class="social-link" title="Facebook Dự án">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M16 8.049c0-4.446-3.582-8.05-8-8.05C3.58 0-.002 3.603-.002 8.05c0 4.017 2.926 7.347 6.75 7.951v-5.625h-2.03V8.05H6.75V6.275c0-2.017 1.195-3.131 3.022-3.131.876 0 1.791.157 1.791.157v1.98h-1.009c-.993 0-1.303.621-1.303 1.258v1.51h2.218l-.354 2.326H9.25V16c3.824-.604 6.75-3.934 6.75-7.951z"/>
-                </svg>
-            </a>
-            <a href="https://github.com/duong-x-u" target="_blank" class="social-link" title="GitHub Admin">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38C13.71 14.53 16 11.54 16 8c0-4.42-3.58-8-8-8z"/>
-                </svg>
-            </a>
-        </div>
-    </footer>
-    <script src="/static/scripts.js"></script>
+    <script src="/static/js/script.js"></script>
 </body>
 </html>

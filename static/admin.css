@@ -6,10 +6,15 @@
     --light-gray: #f8f9fa;
     --dark-gray: #343a40;
     --border-color: #dee2e6;
+
+    /* Pico.css overrides for better integration */
+    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --h1-font-size: 1.8rem;
+    --h2-font-size: 1.5rem;
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: var(--font-family);
     background-color: var(--light-gray);
     color: #212529;
     margin: 0;
@@ -27,7 +32,7 @@ header {
 
 header h1 {
     margin: 0;
-    font-size: 1.5rem;
+    font-size: var(--h1-font-size);
 }
 
 header a {
@@ -48,7 +53,7 @@ header a:hover {
 .card {
     background: #fff;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: var(--border-radius); /* Use Pico.css variable */
     padding: 2rem;
     box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 }
@@ -58,61 +63,18 @@ h2 {
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 0.5rem;
     margin-bottom: 1.5rem;
+    font-size: var(--h2-font-size);
 }
 
-#config-editor, #file-editor {
-    width: 100%;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    padding: 10px;
-    font-family: monospace;
-    font-size: 14px;
-    resize: vertical;
-    box-sizing: border-box;
-}
-
-.button-container {
-    margin-top: 1.5rem;
-    text-align: right;
-}
-
+/* Pico.css buttons are styled by default, but let's ensure custom hover */
 button {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    background-color: var(--primary-color);
-    color: white;
-    font-size: 16px;
-    cursor: pointer;
     transition: background-color 0.3s;
 }
 
 button:hover {
-    background-color: #0056b3;
+    background-color: var(--primary-color); /* Pico uses --primary, not sure how to override */
 }
 
-#config-status-message, #file-status-message {
-    margin-top: 1rem;
-    padding: 10px;
-    border-radius: 4px;
-    text-align: center;
-    font-weight: 500;
-    display: none; /* Hidden by default */
-}
-
-#config-status-message.success, #file-status-message.success {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-    display: block;
-}
-
-#config-status-message.error, #file-status-message.error {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-    display: block;
-}
 
 /* New styles for File Editor */
 .file-editor-layout {
@@ -126,7 +88,7 @@ button:hover {
     overflow-y: auto;
     border: 1px solid var(--border-color);
     padding: 10px;
-    border-radius: 4px;
+    border-radius: var(--border-radius);
 }
 
 #file-content-editor {
@@ -142,7 +104,7 @@ button:hover {
 #file-browser li {
     padding: 5px;
     cursor: pointer;
-    border-radius: 3px;
+    border-radius: var(--border-radius);
 }
 
 #file-browser li:hover {
@@ -164,7 +126,7 @@ button:hover {
     padding: 1.5rem;
     text-align: center;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: var(--border-radius);
 }
 
 .metric-item h3 {
@@ -196,3 +158,47 @@ button:hover {
     transition: width 0.5s ease-in-out;
 }
 
+/* Toast Notification Styles */
+#toast-container {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.toast {
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    color: var(--color);
+    background-color: var(--background-color);
+    opacity: 0;
+    transform: translateY(-100%);
+    transition: all 0.5s ease-in-out;
+    min-width: 250px;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast.hide {
+    opacity: 0;
+    transform: translateY(-100%);
+}
+
+.toast[data-type="success"] {
+    --color: #155724;
+    --background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+}
+
+.toast[data-type="error"] {
+    --color: #721c24;
+    --background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+}

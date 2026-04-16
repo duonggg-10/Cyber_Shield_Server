@@ -1,7 +1,6 @@
 # api/pre_filter.py
 import os
 import random
-import asyncio
 from bytez import Bytez
 
 # Import get_dynamic_config từ api.utils để đọc cấu hình động
@@ -17,6 +16,15 @@ if not BYTEZ_API_KEYS_STR:
 else:
     BYTEZ_API_KEYS = [key.strip() for key in BYTEZ_API_KEYS_STR.split(',') if key.strip()]
 
+# Lấy danh sách API keys Google từ biến môi trường
+GOOGLE_API_KEYS_STR = os.environ.get('GOOGLE_API_KEYS')
+if not GOOGLE_API_KEYS_STR:
+    # Print a warning if GOOGLE_API_KEYS is not set, but don't stop execution
+    print("🔴 [Pre-filter] Cảnh báo: GOOGLE_API_KEYS chưa được thiết lập. Có thể gặp lỗi khi dùng model Google.")
+    GOOGLE_API_KEYS = []
+else:
+    GOOGLE_API_KEYS = [key.strip() for key in GOOGLE_API_KEYS_STR.split(',') if key.strip()]
+
 def create_pre_filter_prompt(text: str) -> str:
     """Tạo prompt cho model lọc nhanh."""
     return (
@@ -27,7 +35,7 @@ def create_pre_filter_prompt(text: str) -> str:
         f"Message: \"{text}\""
     )
 
-async def is_trivial_message(text: str) -> bool:
+def is_trivial_message(text: str) -> bool:
     """
     Sử dụng một model AI nhỏ để kiểm tra xem tin nhắn có phải là tin nhắn rác,
     quá đơn giản để phân tích hay không.
@@ -43,20 +51,35 @@ async def is_trivial_message(text: str) -> bool:
     try:
         # Đọc PRE_FILTER_MODEL_ID từ config.json
         config = get_dynamic_config()
-        pre_filter_model_id = config.get('pre_filter_model_id', 'openai/gpt-3.5-turbo') # Mặc định là gpt-3.5-turbo
+        pre_filter_model_id = config.get('pre_filter_model_id', 'gemini-1.0-pro') # Mặc định là gemini-1.0-pro
         
-        selected_key = random.choice(BYTEZ_API_KEYS)
-        sdk = Bytez(selected_key)
-        model = sdk.model(pre_filter_model_id) # Sử dụng model từ config.json
+        # Chọn một Bytez API key
+        selected_bytez_key = random.choice(BYTEZ_API_KEYS)
+        sdk = Bytez(selected_bytez_key)
+
+        # Xác định provider key dựa trên model ID
+        provider_api_key = None
+        if pre_filter_model_id.startswith('gemini') or pre_filter_model_id.startswith('google'):
+            if not GOOGLE_API_KEYS:
+                print(f"🔴 [Pre-filter] Lỗi: GOOGLE_API_KEYS chưa được thiết lập để dùng model Google: {pre_filter_model_id}.")
+                return False
+            provider_api_key = random.choice(GOOGLE_API_KEYS)
+        # elif pre_filter_model_id.startswith('openai'): # Tạm thời comment lại để nhất quán với lựa chọn hiện tại của người dùng
+            # TODO: Add logic here to load and use OPENAI_API_KEYS if needed in the future
+            # print(f"🔴 [Pre-filter] Cảnh báo: Model OpenAI '{pre_filter_model_id}' được cấu hình nhưng chưa có logic xử lý OPENAI_API_KEYS.")
+            # return False
+        
+        if not provider_api_key:
+            print(f"🔴 [Pre-filter] Lỗi: Không thể tìm thấy provider API key cho model được cấu hình: {pre_filter_model_id}.")
+            return False
+
+        model = sdk.model(pre_filter_model_id, provider_api_key) # Sử dụng model từ config.json VÀ provider_api_key
         
         prompt = create_pre_filter_prompt(text)
         
-        print(f"➡️  [Pre-filter] Đang kiểm tra tin nhắn đơn giản với {pre_filter_model_id}...")
+        print(f"➡️  [Pre-filter] Đang kiểm tra tin nhắn đơn giản với {pre_filter_model_id} (thông qua Bytez)...")
         
-        res = await asyncio.to_thread(
-            model.run,
-            [{"role": "user", "content": prompt}]
-        )
+        res = model.run([{"role": "user", "content": prompt}])
 
         if res.error:
             print(f"🔴 [Pre-filter] Lỗi từ Bytez SDK: {res.error}. Bỏ qua bộ lọc.")

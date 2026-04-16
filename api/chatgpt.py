@@ -3,9 +3,7 @@ import os
 import json
 import random
 from bytez import Bytez
-import aiohttp
-import asyncio
-from api.utils import get_dynamic_config # NEW IMPORT
+from api.utils import get_dynamic_config, print_masked_api_keys # NEW IMPORT
 
 # --- Cấu hình API Keys (Hỗ trợ xoay vòng) ---
 BYTEZ_API_KEYS_STR = os.environ.get('BYTEZ_API_KEY')
@@ -16,6 +14,7 @@ if not BYTEZ_API_KEYS_STR:
     BYTEZ_API_KEYS = []
 else:
     BYTEZ_API_KEYS = [key.strip() for key in BYTEZ_API_KEYS_STR.split(',') if key.strip()]
+print_masked_api_keys(BYTEZ_API_KEYS, "BYTEZ_API_KEYS")
 
 def create_chatgpt_prompt(text: str):
     """Tạo prompt chi tiết và toàn diện cho ChatGPT."""
@@ -63,36 +62,6 @@ Analyze the message for the following patterns.
 *   **Keywords & Slang:** Look for slang or coded language related to the sale of drugs, weapons, or other forbidden items.
 *   **Example:** "cần tìm hàng", "ai có đồ không", "để lại 1 chỉ".
 
-#### **6. `hate_speech` (Ngôn từ kích động thù địch / Miệt thị)**
-*   **Coded Language & Stereotypes:** Messages using derogatory terms, slurs, or stereotypes against groups based on ethnicity, religion, gender, sexual orientation, disability, or region.
-*   **Examples:** "thằng Bắc Kì", "con cave", "bọn mọi".
-*   **Action:** Classify as `hate_speech` with score (2-4), recommend reporting.
-
-#### **7. `anti_state` (Tuyên truyền chống phá Nhà nước)**
-*   **Political Dissension:** Content that distorts history, denies revolutionary achievements, spreads false narratives about the government or state, incites division, or attempts to undermine national unity. (Luật An ninh mạng Điều 8, Khoản 1)
-*   **Examples:** Criticizing the Party/State with false information, calling for protests against government policies based on misinformation.
-*   **Action:** Classify as `anti_state` with a high score (4-5), recommend reporting to authorities.
-
-#### **8. `defamation` / `slander` (Phỉ báng / Vu khống)**
-*   **False Accusations:** Spreading false information that damages the honor, reputation, or legitimate rights and interests of specific individuals or organizations. (Luật An ninh mạng Điều 8, Khoản 3)
-*   **Examples:** "Ông A tham nhũng hàng tỷ đồng" (if false), "Công ty Y lừa đảo khách hàng."
-*   **Action:** Classify as `defamation` with a score (3-5), recommend reporting.
-
-#### **9. `misinformation` / `disinformation` (Thông tin sai sự thật / Tin giả)**
-*   **Public Confusion:** Disseminating false or misleading information that causes public confusion, panic, or severe damage to socio-economic activities. (Luật An ninh mạng Điều 8, Khoản 4)
-*   **Examples:** False news about a pandemic, economic collapse, or natural disaster.
-*   **Action:** Classify as `misinformation` with score (3-5), recommend fact-checking and reporting.
-
-#### **10. `incitement_to_violence` / `incitement_to_riot` (Kích động bạo lực / Gây rối)**
-*   **Call to Action:** Messages explicitly inciting riots, disrupting security, or causing public disorder. This is more direct than general "violence." (Luật An ninh mạng Điều 8, Khoản 2)
-*   **Examples:** "Tập trung tại X để chống phá Y!", "Hãy đánh đập kẻ đó!".
-*   **Action:** Classify as `incitement_to_violence` with a high score (4-5), recommend immediate reporting to authorities.
-
-#### **11. `personal_data_leak` (Lộ lọt thông tin cá nhân)**
-*   **Unauthorized Sharing:** Publicly sharing sensitive personal information (phone numbers, addresses, ID details, bank accounts) of others without their consent. (Liên quan đến Điều 8 Khoản 3 về xâm phạm quyền và lợi ích hợp pháp).
-*   **Examples:** "Số điện thoại của nó đây: 09xxxxxxx", "Địa chỉ nhà của con A là..."
-*   **Action:** Classify as `personal_data_leak` with a score (3-5), recommend reporting and taking down the information.
-
 ---
 ### **THE SAFE ZONE (What NOT to Flag - Examples)**
 To avoid "over-thinking" and reduce false positives:
@@ -108,63 +77,113 @@ To avoid "over-thinking" and reduce false positives:
 
 **JSON Output Structure (in Vietnamese):**
 - **"is_dangerous"**: (boolean)
-- **"reason"**: (string, explain your logic and reference the specific rule/heuristic you used)
-- **"types"**: (string: one of ["scam", "violence", "cyberbullying", "hate_speech", "self_harm", "child_exploitation", "illegal_trade", "anti_state", "defamation", "misinformation", "incitement_to_violence", "personal_data_leak", "other"])
+- **"reason"**: (string, MAX 30 words. Keep it short and concise.)
+- **"types"**: (string: one of ["scam", "violence", "cyberbullying", "hate_speech", "self_harm", "child_exploitation", "illegal_trade", "anti_state", "other"])
 - **"score"**: (integer: 0-5)
-- **"recommend"**: (string)
+- **"recommend"**: (string, MAX 30 words. Keep it short.)
+
+**NOTE:**
+- Only respond the analyze result in Vietnamese
+- KEEP RESPONSE SHORT to avoid token limit.
 
 **TIN NHẮN CẦN PHÂN TÍCH:** "{text}"
 """
 
-async def analyze_with_chatgpt_http(text: str):
+def analyze_with_chatgpt_http(text: str):
     """
-    Gửi văn bản đến ChatGPT qua Bytez SDK để phân tích, có hỗ trợ xoay vòng key.
+    Gửi văn bản đến ChatGPT qua Bytez SDK, với cơ chế tự động thử lại và xoay vòng key.
     Trả về một dictionary chứa kết quả hoặc thông tin lỗi.
     """
     if not BYTEZ_API_KEYS:
         print("🔴 [ChatGPT] Lỗi: Biến môi trường BYTEZ_API_KEY chưa được thiết lập hoặc rỗng.")
         return {"error": "CONFIG_MISSING", "message": "BYTEZ_API_KEY is not set or empty."}
 
-    try:
-        # --- LOGIC XOAY VÒNG KEY ---
-        selected_key = random.choice(BYTEZ_API_KEYS)
-        print(f"➡️  [ChatGPT] Đang gửi yêu cầu (sử dụng key có 4 ký tự cuối: ...{selected_key[-4:]})")
-        
-        # Đọc CHATGPT_MODEL_ID từ config.json
-        config = get_dynamic_config()
-        chatgpt_model_id = config.get('chatgpt_model_id', 'openai/gpt-4o') # Mặc định là gpt-4o
-        
-        sdk = Bytez(selected_key)
-        model = sdk.model(chatgpt_model_id)
-        
-        prompt = create_chatgpt_prompt(text[:3000])
-        
-        res = await asyncio.to_thread(
-            model.run,
-            [{"role": "user", "content": prompt}]
-        )
+    # Đọc CHATGPT_MODEL_ID từ config.json
+    config = get_dynamic_config()
+    chatgpt_model_id = config.get('chatgpt_model_id', 'gpt-4o')
+    prompt = create_chatgpt_prompt(text[:3000])
 
-        if res.error:
-            print(f"🔴 [ChatGPT] Lỗi từ Bytez SDK: {res.error}")
-            return {"error": "BYTEZ_SDK_ERROR", "message": str(res.error)}
+    # Xáo trộn danh sách key để phân phối tải
+    shuffled_keys = random.sample(BYTEZ_API_KEYS, len(BYTEZ_API_KEYS))
+    empty_responses_count = 0
 
-        output = res.output
-        if isinstance(output, dict) and "content" in output:
-            json_text = output['content']
-            cleaned_json_text = json_text.strip().replace('`', '')
-            if cleaned_json_text.startswith("json"):
-                 cleaned_json_text = cleaned_json_text[4:].strip()
+    for i, selected_key in enumerate(shuffled_keys):
+        if empty_responses_count >= 5:
+            print(f"⚠️ [ChatGPT] Đã nhận 5 phản hồi rỗng liên tiếp. Khả năng cao tin nhắn bị bộ lọc an toàn chặn cứng. Trả về kết quả cảnh báo mặc định.")
+            return {
+                "is_dangerous": True,
+                "reason": "Tin nhắn chứa nội dung cực kỳ nhạy cảm hoặc bạo lực khiến nhiều bộ lọc an toàn của AI đồng loạt từ chối xử lý.",
+                "types": "violence",
+                "score": 5,
+                "recommend": "Tuyệt đối cẩn trọng. Nội dung này vi phạm chính sách an toàn nghiêm trọng."
+            }
 
-            result = json.loads(cleaned_json_text)
-            print("✅ [ChatGPT] Phân tích thành công.")
-            return result
-        else:
-            print(f"🔴 [ChatGPT] Lỗi: Định dạng output không mong muốn: {output}")
-            return {"error": "UNEXPECTED_OUTPUT_FORMAT", "message": "The output from Bytez was not in the expected format."}
+        print(f"➡️  [ChatGPT] Đang thử key #{i + 1}/{len(shuffled_keys)} (đuôi: ...{selected_key[-4:]})")
+        
+        try:
+            sdk = Bytez(selected_key)
+            model = sdk.model(chatgpt_model_id)
+            
+            # Thêm tham số max_tokens nếu SDK hỗ trợ (thử nghiệm)
+            res = model.run([{"role": "user", "content": prompt}])
 
-    except json.JSONDecodeError as e:
-        print(f"🔴 [ChatGPT] Lỗi giải mã JSON: {e}. Raw text: '{cleaned_json_text}'")
-        return {"error": "JSON_DECODE_ERROR", "message": f"Failed to decode JSON from model output."}
-    except Exception as e:
-        print(f"🔴 [ChatGPT] Lỗi ngoại lệ khi gọi Bytez: {e}")
-        return {"error": "CHATGPT_EXCEPTION", "message": str(e)}
+            if res.error:
+                # Lỗi từ SDK, có thể do quota, sai key, etc.
+                print(f"🟡 [ChatGPT] Lỗi từ Bytez SDK với key ...{selected_key[-4:]}: {res.error}. Thử key tiếp theo.")
+                continue # Thử key tiếp theo
+
+            output = res.output
+            
+            # 1. Xử lý phản hồi rỗng (chỉ có role)
+            if isinstance(output, dict) and output.get('role') == 'assistant' and 'content' not in output:
+                 print(f"🟡 [ChatGPT] Phản hồi rỗng (Empty Content) từ key ...{selected_key[-4:]}. Thử key tiếp theo.")
+                 empty_responses_count += 1
+                 continue
+
+            if isinstance(output, dict) and "content" in output:
+                json_text = output['content']
+                # Làm sạch JSON text (xóa markdown, v.v.)
+                cleaned_json_text = json_text.strip().replace('`', '')
+                if cleaned_json_text.startswith("json"):
+                    cleaned_json_text = cleaned_json_text[4:].strip()
+
+                try:
+                    result = json.loads(cleaned_json_text)
+                    print(f"✅ [ChatGPT] Phân tích thành công với key ...{selected_key[-4:]}.")
+                    return result # Trả về kết quả thành công
+                except json.JSONDecodeError as e:
+                    # 2. Logic "Vá" JSON (JSON Repair)
+                    print(f"⚠️ [ChatGPT] JSON bị lỗi/cắt cụt: {e}. Đang thử vá...")
+                    try:
+                        # Thử đóng ngoặc một cách thông minh hơn
+                        repaired_json = cleaned_json_text.strip()
+                        # Xóa dấu phẩy thừa ở cuối nếu có (ví dụ: "abc",)
+                        if repaired_json.endswith(','):
+                            repaired_json = repaired_json[:-1]
+                        
+                        # Thêm ngoặc đóng còn thiếu
+                        if not repaired_json.endswith('}'):
+                            repaired_json += '}'
+                        if not repaired_json.endswith('"}') and not repaired_json.endswith('e}') and not repaired_json.endswith('l}'): # Check kết thúc bool/null
+                             repaired_json = repaired_json.rstrip('"}') + '"}'
+                        
+                        # Cố gắng parse lại
+                        result = json.loads(repaired_json)
+                        print(f"✅ [ChatGPT] Đã vá lỗi JSON thành công! Key ...{selected_key[-4:]} được chấp nhận.")
+                        return result
+                    except json.JSONDecodeError:
+                         print(f"🟡 [ChatGPT] Vá thất bại. Raw: '{cleaned_json_text[:50]}...'. Thử key tiếp theo.")
+                         continue
+            else:
+                print(f"🟡 [ChatGPT] Định dạng output không mong muốn từ key ...{selected_key[-4:]}: {output}. Thử key tiếp theo.")
+                continue
+
+        except Exception as e:
+            # Lỗi ngoại lệ khác (mạng, etc.)
+            print(f"🔴 [ChatGPT] Lỗi ngoại lệ không xác định với key ...{selected_key[-4:]}: {e}. Thử key tiếp theo.")
+            continue
+            
+    # Nếu vòng lặp kết thúc mà không có kết quả
+    print("🔴 [ChatGPT] Phân tích thất bại sau khi đã thử tất cả các key.")
+    return {"error": "ALL_KEYS_FAILED", "message": "Đã thử tất cả các API key của Bytez nhưng đều thất bại."}
+

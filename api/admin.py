@@ -3,10 +3,13 @@ import functools
 import json
 import os
 import psutil # << IMPORT MỚI
+import sys # << IMPORT MỚI
 from flask import (
     Blueprint, request, render_template, redirect, url_for, session, flash, jsonify
 )
 from api.utils import get_dynamic_config # Import hàm đọc config dùng chung
+from extensions import limiter
+from api.logger import audit_log # << IMPORT AUDIT LOGGER
 
 admin_endpoint = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -36,6 +39,7 @@ def login_required(view):
 
 # --- ROUTE GIAO DIỆN (UI) ---
 @admin_endpoint.route('/login', methods=['GET', 'POST'])
+@limiter.limit("10 per minute") # << THÊM RATE LIMIT
 def login():
     # ... (giữ nguyên)
     if 'admin_logged_in' in session:
@@ -47,8 +51,10 @@ def login():
         if submitted_token and correct_token and submitted_token == correct_token:
             session['admin_logged_in'] = True
             session.permanent = True
+            audit_log.info(f"Successful login from IP: {request.remote_addr}") # << AUDIT LOG
             return redirect(url_for('admin.dashboard'))
         else:
+            audit_log.warning(f"Failed login attempt from IP: {request.remote_addr}") # << AUDIT LOG
             flash('Admin Secret Token không chính xác!')
     return render_template('admin_login.html')
 
@@ -59,6 +65,7 @@ def dashboard():
 
 @admin_endpoint.route('/logout')
 def logout():
+    audit_log.info(f"Successful logout from IP: {request.remote_addr}") # << AUDIT LOG
     session.clear()
     return redirect(url_for('admin.login'))
 
@@ -79,8 +86,10 @@ def config_api():
         if not request.is_json:
             return jsonify(error="Yêu cầu phải là dạng JSON."), 400
         try:
+            new_config = request.get_json()
             with open('config.json', 'w', encoding='utf-8') as f:
-                json.dump(request.get_json(), f, indent=2, ensure_ascii=False)
+                json.dump(new_config, f, indent=2, ensure_ascii=False)
+            audit_log.info(f"Config updated by IP: {request.remote_addr}. New config: {json.dumps(new_config)}") # << AUDIT LOG
             return jsonify(success=True, message="Cập nhật config.json thành công!")
         except Exception as e:
             return jsonify(error=f"Lỗi khi ghi file: {str(e)}"), 500
@@ -137,12 +146,14 @@ def update_file_content_api():
     if not filepath or content is None:
         return jsonify(error="Thiếu 'filepath' hoặc 'content'."), 400
     if not is_safe_path(filepath):
+        audit_log.warning(f"Path traversal attempt blocked from IP: {request.remote_addr}. Path: {filepath}") # << AUDIT LOG
         return jsonify(error="Truy cập bị từ chối."), 403
 
     try:
         abs_path = os.path.join(PROJECT_ROOT, filepath)
         with open(abs_path, 'w', encoding='utf-8') as f:
             f.write(content)
+        audit_log.info(f"File '{filepath}' saved by IP: {request.remote_addr}") # << AUDIT LOG
         return jsonify(success=True, message=f"Đã lưu file '{filepath}' thành công!")
     except Exception as e:
         return jsonify(error=f"Không thể ghi file: {str(e)}"), 500
@@ -163,3 +174,39 @@ def get_system_metrics_api():
         })
     except Exception as e:
         return jsonify(error=f"Lỗi khi lấy thông số hệ thống: {str(e)}"), 500
+
+# === API MỚI CHO LOG VIEWER ===
+@admin_endpoint.route('/api/logs', methods=['GET'])
+@login_required
+def get_logs_api():
+    """API để lấy N dòng log gần nhất từ nohup.out."""
+    LOG_FILE_PATH = 'nohup.out' # Tên file log chính
+    NUM_LINES = request.args.get('lines', 100, type=int) # Mặc định lấy 100 dòng
+
+    if not os.path.exists(LOG_FILE_PATH):
+        return jsonify(error="File log không tồn tại."), 404
+
+    try:
+        with open(LOG_FILE_PATH, 'r', encoding='utf-8', errors='ignore') as f:
+            # Đọc tất cả các dòng và chỉ lấy N dòng cuối cùng
+            lines = f.readlines()
+            last_n_lines = "".join(lines[-NUM_LINES:])
+        return jsonify(logs=last_n_lines)
+    except Exception as e:
+        return jsonify(error=f"Lỗi khi đọc file log: {str(e)}"), 500
+
+# === API MỚI CHO SERVER ACTIONS ===
+@admin_endpoint.route('/api/server/restart', methods=['POST'])
+@login_required
+def restart_server_api():
+    """API để khởi động lại server."""
+    audit_log.info(f"Server restart initiated by IP: {request.remote_addr}")
+    # Trả về phản hồi ngay lập tức để client không bị treo
+    response = jsonify(success=True, message="Server đang khởi động lại...")
+    # Sau đó, khởi động lại server
+    # os.execv thay thế tiến trình hiện tại bằng một tiến trình mới
+    # Đảm bảo PYTHONPATH được giữ nguyên nếu cần
+    python = sys.executable
+    os.execv(python, [python] + sys.argv)
+    return response # Dòng này sẽ không bao giờ được chạy
+
