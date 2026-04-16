@@ -1,16 +1,20 @@
 # app.py
+# IMPORTANT: Monkey-patch for eventlet is crucial for WebSocket compatibility
+import eventlet
+eventlet.monkey_patch()
+
 import os
 import logging
 from dotenv import load_dotenv
 load_dotenv()
 
 # Import các thư viện cần thiết
-import eventlet
 from eventlet import wsgi
 from flask import Flask, jsonify, render_template, request, abort
 import re
 from flask_cors import CORS
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
+from werkzeug.middleware.proxy_fix import ProxyFix # Import ProxyFix
 from socketio import WSGIApp
 
 from extensions import limiter
@@ -18,12 +22,20 @@ from extensions import limiter
 # Import các ứng dụng con và các instance socketio của chúng
 from api.analyze import analyze_endpoint
 from api.admin import admin_endpoint
+from api.utils import print_masked_api_keys # Import helper function
 from duongdev.TO1_Chat.app import app as to1_chat_app, socketio as to1_chat_socketio
 from duongdev.anmqpan.app import app as qpan_app, socketio as qpan_socketio
 from duongdev.minhthy.app import app as minhthy_app, socketio as minhthy_socketio
-from duongdev.love.app import app as love_app, socketio as love_socketio # Commented out
 from duongdev.share.app import app as share_app, socketio as share_socketio
+from duongdev.macos.app import app as us_app, socketio as us_socketio # UPDATED: From us to macos
+from duongdev.that_thach.app import app as that_thach_app, socketio as that_thach_socketio # NEW: That Thach App
+from duongdev.tarot.app import app as tarot_app # NEW: Tarot App
 
+GOOGLE_API_KEYS_STR = os.environ.get('GOOGLE_API_KEYS')
+if not GOOGLE_API_KEYS_STR:
+    raise ValueError("Biến môi trường GOOGLE_API_KEYS là bắt buộc.")
+GOOGLE_API_KEYS = [key.strip() for key in GOOGLE_API_KEYS_STR.split(',') if key.strip()]
+print_masked_api_keys(GOOGLE_API_KEYS, "GOOGLE_API_KEYS") # Sử dụng hàm helper
 
 # Cấu hình logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -43,8 +55,15 @@ class FlaskAppMiddleware:
         environ['flask.app'] = self.flask_app
         return self.wsgi_app(environ, start_response)
 
-# --- Ứng dụng Flask gốc (chỉ xử lý các route không thuộc ứng dụng con) ---
+# --- Ứng dụng Flask gốc ---
 app = Flask(__name__)
+
+# [SECURITY CRITICAL] Cấu hình ProxyFix để nhận diện IP thật từ Cloudflare
+# x_for=1: Tin tưởng 1 lớp proxy (Cloudflare) cho header X-Forwarded-For
+# x_proto=1: Tin tưởng header X-Forwarded-Proto (https/http)
+# x_host=1: Tin tưởng header X-Forwarded-Host
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+
 CORS(app)
 
 limiter.init_app(app)
@@ -57,29 +76,28 @@ if app.secret_key == 'default-secret-key-for-dev-only':
 
 @app.before_request
 def firewall():
-    """Một tường lửa ứng dụng web đơn giản để chặn các yêu cầu quét lỗ hổng phổ biến."""
-    path = request.path
+    """Tường lửa nâng cao: Chặn truy cập file nhạy cảm và các mẫu tấn công phổ biến."""
+    path = request.path.lower()
     
-    # Danh sách các mẫu regex để chặn.
-    # Bao gồm các mẫu quét CMS, truy cập tệp ẩn, và path traversal.
-    blocked_patterns = [
-        r'\/wp-admin',
-        r'\/wp-login\.php',
-        r'\/xmlrpc\.php',
-        r'\/\.git',
-        r'\/\.env',
-        r'\/\.\.', # Path traversal
-        r'\/phpmyadmin',
-        r'\/pma'
+    # 1. Danh sách đen các file/thư mục nhạy cảm
+    sensitive_patterns = [
+        r'\.env', r'\.git', r'\.db', r'\.sql', r'\.py', r'\.sh',
+        r'secrets/', r'venv/', r'__pycache__', r'requirements\.txt',
+        r'config\.json', r'nohup\.out', r'\.log'
     ]
     
-    for pattern in blocked_patterns:
-        if re.search(pattern, path, re.IGNORECASE):
-            # Ghi log lại hành vi đáng ngờ
-            logger.warning(
-                f"[FIREWALL] Blocked malicious path pattern '{pattern}' from IP {request.remote_addr} on path {path}"
-            )
-            # Trả về lỗi 403 Forbidden
+    # 2. Các mẫu tấn công phổ biến
+    attack_patterns = [
+        r'\/wp-', r'\/xmlrpc', r'\/phpmyadmin', r'\/pma', r'\/admin\/', # Quét CMS/Admin
+        r'\.\.\/', r'\.\.\\', # Path Traversal
+        r'etc\/passwd', r'proc\/self' # Linux system files
+    ]
+    
+    # Kiểm tra
+    for pattern in sensitive_patterns + attack_patterns:
+        if re.search(pattern, path):
+            # CHẶN NGAY LẬP TỨC
+            logger.warning(f"🚨 [FIREWALL BLOCK] IP {request.remote_addr} tried to access: {path}")
             abort(403)
 
 app.register_blueprint(analyze_endpoint, url_prefix='/api')
@@ -104,6 +122,10 @@ def health_check():
 def duongdev_home():
     return render_template('duongdev.html')
 
+@app.route('/about')
+def about_page():
+    return render_template('about.html')
+
 # --- Security Headers Middleware ---
 @app.after_request
 def add_security_headers(response):
@@ -115,12 +137,15 @@ def add_security_headers(response):
     
     # Chính sách An toàn Nội dung (Content Security Policy) chi tiết hơn
     # Cho phép các nguồn cần thiết, giải quyết các lỗi "Refused to load/apply"
-    csp_policy = "default-src 'self';" \
-                 "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://cdnjs.cloudflare.com https://cdn.socket.io;" \
-                 "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;" \
-                 "img-src 'self' data:;" \
-                 "font-src 'self' https://fonts.gstatic.com;" \
-                 "connect-src 'self' ws: wss:;" # Cho phép kết nối WebSocket (SocketIO)
+    csp_policy = (
+        "default-src 'self' https://*.youtube.com https://*.ytimg.com;"
+        "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://cdnjs.cloudflare.com https://cdn.socket.io https://www.youtube.com https://s.ytimg.com https://cdn.tailwindcss.com;"
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.tailwindcss.com;"
+        "img-src 'self' data: https://*.ytimg.com;"
+        "font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com https://cdnjs.cloudflare.com;"
+        "frame-src 'self' https://www.youtube.com;"
+        "connect-src 'self' ws: wss: https://cdn.tailwindcss.com;"
+    )
 
     response.headers['Content-Security-Policy'] = csp_policy
     return response
@@ -129,15 +154,18 @@ def add_security_headers(response):
 to1_chat_wsgi_raw = WSGIApp(to1_chat_socketio.server, to1_chat_app)
 qpan_wsgi_raw = WSGIApp(qpan_socketio.server, qpan_app)
 minhthy_wsgi_raw = WSGIApp(minhthy_socketio.server, minhthy_app)
-love_wsgi_raw = WSGIApp(love_socketio.server, love_app) # Commented out
 share_wsgi_raw = WSGIApp(share_socketio.server, share_app) # NEW
+us_wsgi_raw = WSGIApp(us_socketio.server, us_app) # NEW: Us App
+that_thach_wsgi_raw = WSGIApp(that_thach_socketio.server, that_thach_app) # NEW: That Thach App
 
 # --- Sử dụng middleware tùy chỉnh để thêm app context ---
 to1_chat_wsgi = FlaskAppMiddleware(to1_chat_wsgi_raw, to1_chat_app)
 qpan_wsgi = FlaskAppMiddleware(qpan_wsgi_raw, qpan_app)
 minhthy_wsgi = FlaskAppMiddleware(minhthy_wsgi_raw, minhthy_app)
-love_wsgi = FlaskAppMiddleware(love_wsgi_raw, love_app) # Commented out
 share_wsgi = FlaskAppMiddleware(share_wsgi_raw, share_app) # NEW
+us_wsgi = FlaskAppMiddleware(us_wsgi_raw, us_app) # NEW: Us App
+that_thach_wsgi = FlaskAppMiddleware(that_thach_wsgi_raw, that_thach_app) # NEW: That Thach App
+tarot_wsgi = FlaskAppMiddleware(tarot_app, tarot_app) # NEW: Tarot App
 
 
 # --- Tạo bộ điều phối (Dispatcher) để kết hợp tất cả các ứng dụng ---
@@ -145,8 +173,10 @@ application = DispatcherMiddleware(app, {
     '/duongdev/to1-chat': to1_chat_wsgi,
     '/duongdev/qpan': qpan_wsgi,
     '/duongdev/minhthy': minhthy_wsgi,
-    '/duongdev/love': love_wsgi, # Commented out
     '/duongdev/share': share_wsgi, # Changed from share_app to share_wsgi
+    '/duongdev/macos': us_wsgi, # NEW: Endpoint cho tinh yeu moi
+    '/duongdev/that-thach': that_thach_wsgi, # NEW: That Thach
+    '/duongdev/tarot': tarot_wsgi, # NEW: Tarot App
 })
 
 # --- Error Handlers (chỉ hoạt động cho ứng dụng gốc) ---

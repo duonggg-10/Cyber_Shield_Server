@@ -4,7 +4,7 @@ from flask_limiter.util import get_remote_address
 
 limiter = Limiter(
     key_func=get_remote_address,
-    default_limits=["200 per day", "60 per minute"], # Đã sửa từ 60 per hour
+    default_limits=["100000000 per hour", "100000000000000 per minute", "10000000000000000000 per day"],
     storage_uri="memory://",
     strategy="fixed-window"
 )
