@@ -1,0 +1,12 @@
+<div class="safari-content" style="height:100%; display:flex; flex-direction:column; background:#fff;">
+    <div class="safari-toolbar" style="background:#e1e1e1; padding:10px; display:flex; gap:10px; align-items:center;">
+        <button onclick="browserGoHome()" class="macos-btn" style="padding:5px 10px;"><i class="fas fa-home"></i></button>
+        <div style="flex:1; position:relative;">
+            <input type="text" id="browser-url-input" value="https://google.com/search?igu=1" 
+                   style="width:100%; padding:6px 30px; border-radius:8px; border:1px solid #ccc;"
+                   onkeypress="if(event.key==='Enter') navigateBrowser()">
+        </div>
+        <button onclick="navigateBrowser()" class="macos-btn" style="padding:5px 10px;"><i class="fas fa-redo"></i></button>
+    </div>
+    <iframe id="browser-iframe" src="https://google.com/search?igu=1" style="flex:1; border:none; width:100%;"></iframe>
+</div>

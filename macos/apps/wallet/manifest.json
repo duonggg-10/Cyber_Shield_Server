@@ -1,0 +1,6 @@
+{
+    "name": "Wallet",
+    "description": "Quản lý chi tiêu cá nhân phong cách Apple Card.",
+    "icon_svg": "<svg viewBox='0 0 100 100'><defs><linearGradient id='wal-grad' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' style='stop-color:#1c1c1e'/><stop offset='100%' style='stop-color:#2c2c2e'/></linearGradient></defs><rect width='100' height='100' rx='22' fill='url(#wal-grad)'/><path d='M30 40H70V70H30V40ZM35 45V65H65V45H35Z' fill='white' opacity='0.8'/><circle cx='70' cy='55' r='10' fill='#ff9500'/></svg>",
+    "category": "Finance"
+}

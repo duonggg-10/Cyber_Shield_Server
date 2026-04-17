@@ -1,0 +1,6 @@
+{
+    "name": "Music",
+    "description": "Nghe nhạc Lofi & Chill từ YouTube.",
+    "icon_svg": "<svg viewBox='0 0 100 100'><defs><linearGradient id='ms-grad' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' style='stop-color:#fc5c7d'/><stop offset='100%' style='stop-color:#6a82fb'/></linearGradient></defs><rect width='100' height='100' rx='22' fill='url(#ms-grad)'/><path d='M40 70V30L70 20V60' fill='none' stroke='white' stroke-width='6' stroke-linejoin='round'/><circle cx='32' cy='70' r='8' fill='white'/><circle cx='62' cy='60' r='8' fill='white'/></svg>",
+    "category": "Media"
+}

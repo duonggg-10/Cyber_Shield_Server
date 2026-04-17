@@ -1,0 +1,177 @@
+<div style="display: flex; height: 100%; overflow: hidden;">
+    <!-- Sidebar -->
+    <div class="settings-sidebar">
+        <div class="sidebar-item active" onclick="switchSettingsTab('appearance')"><i class="fas fa-palette"></i> Appearance</div>
+        <div class="sidebar-item" onclick="switchSettingsTab('desktop')"><i class="fas fa-desktop"></i> Desktop & Dock</div>
+        <div class="sidebar-item" onclick="switchSettingsTab('network')"><i class="fas fa-wifi"></i> Network</div>
+        <div class="sidebar-item" onclick="switchSettingsTab('storage')"><i class="fas fa-hdd"></i> Storage</div>
+        <div class="sidebar-item" onclick="switchSettingsTab('battery')"><i class="fas fa-battery-half"></i> Battery</div>
+        <div class="sidebar-item" onclick="switchSettingsTab('performance')"><i class="fas fa-tachometer-alt"></i> Performance</div>
+        <div class="sidebar-item" onclick="switchSettingsTab('profile')"><i class="fas fa-user-circle"></i> User Profile</div>
+        <div class="sidebar-item" onclick="switchSettingsTab('about')"><i class="fas fa-info-circle"></i> General</div>
+        <div class="sidebar-item" onclick="switchSettingsTab('sound')"><i class="fas fa-volume-up"></i> Sound</div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="settings-content" id="settings-main-content">
+        <!-- Header for Mobile Back Button (Handled by JS to show/hide) -->
+        <div id="settings-mobile-header" class="mobile-only" style="margin-bottom: 20px; display: none;">
+            <button onclick="showSettingsSidebar()" class="macos-btn" style="background:transparent; color:var(--accent-blue); padding:0; font-size:1rem;">
+                <i class="fas fa-chevron-left"></i> Back
+            </button>
+        </div>
+
+        <!-- 1. Appearance Tab -->
+        <div id="tab-appearance" class="settings-tab active">
+            <h2 class="settings-title">Appearance</h2>
+            <div class="settings-card">
+                <div class="ios-list-item">
+                    <div class="ios-list-label"><i class="fas fa-tint" style="color:#007aff;"></i> Accent Color</div>
+                    <div class="color-options">
+                        <div class="color-swatch" style="background:#2997FF;" onclick="setAccent('#2997FF')"></div>
+                        <div class="color-swatch" style="background:#FF2D55;" onclick="setAccent('#FF2D55')"></div>
+                        <div class="color-swatch" style="background:#30D158;" onclick="setAccent('#30D158')"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Desktop Tab -->
+        <div id="tab-desktop" class="settings-tab">
+            <h2 class="settings-title">Desktop & Dock</h2>
+            <div class="settings-card">
+                <div class="settings-row" style="flex-direction:column; align-items:flex-start; gap:10px;">
+                    <span>Wallpaper URL</span>
+                    <input type="text" class="macos-input" id="setting-wallpaper" placeholder="Paste URL..." style="width:100%;" onchange="saveSettings()">
+                </div>
+                <div class="settings-divider"></div>
+                <div class="settings-row" style="padding: 15px 18px; display:flex; gap:10px;">
+                    <label class="macos-btn" for="wallpaper-upload">Upload Image</label>
+                    <button class="macos-btn" style="background:#ff3b30;" onclick="deleteWallpaper()">Delete Current</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Network Tab -->
+        <div id="tab-network" class="settings-tab">
+            <h2 class="settings-title">Network</h2>
+            <div class="settings-card">
+                <div class="ios-list-item">
+                    <div class="ios-list-label">Local IP Address</div>
+                    <span id="net-ip" style="opacity:0.5;">Detecting...</span>
+                </div>
+                <div class="settings-divider"></div>
+                <div class="ios-list-item">
+                    <div class="ios-list-label">Status</div>
+                    <span style="color:#30D158; font-weight:600;">Connected</span>
+                </div>
+            </div>
+            <div class="settings-card">
+                <div class="settings-row" style="flex-direction:column; align-items:flex-start;">
+                    <span style="font-weight:600; margin-bottom:10px;">Ping Test</span>
+                    <div style="display:flex; gap:10px; width:100%;">
+                        <input type="text" id="ping-url" class="macos-input" value="google.com" style="flex:1;">
+                        <button class="macos-btn" onclick="runPingTest()">Test</button>
+                    </div>
+                    <div id="ping-results" style="margin-top:15px; font-family:monospace; font-size:0.75rem; opacity:0.7; width:100%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Storage Tab -->
+        <div id="tab-storage" class="settings-tab">
+            <h2 class="settings-title">Storage</h2>
+            <div class="settings-card" style="padding:20px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <span style="font-weight:600;">System Drive</span>
+                    <span id="storage-percent" style="opacity:0.6;">--% used</span>
+                </div>
+                <div style="width:100%; height:8px; background:rgba(255,255,255,0.1); border-radius:10px; overflow:hidden; margin-bottom:20px;">
+                    <div id="storage-bar" style="width:0%; height:100%; background:var(--accent-blue);"></div>
+                </div>
+                <div class="ios-list-item" style="padding:10px 0;">
+                    <div class="ios-list-label">Photos & Videos</div>
+                    <span id="stat-photos">-- items</span>
+                </div>
+                <div class="ios-list-item" style="padding:10px 0;">
+                    <div class="ios-list-label">Notes & Docs</div>
+                    <span id="stat-notes">-- items</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Battery Tab -->
+        <div id="tab-battery" class="settings-tab">
+            <h2 class="settings-title">Battery</h2>
+            <div style="text-align:center; padding:30px 0;">
+                <i id="battery-icon-big" class="fas fa-battery-full" style="font-size:4rem; color:#30D158;"></i>
+                <div id="battery-level-big" style="font-size:2.5rem; font-weight:700; margin-top:10px;">100%</div>
+                <div id="battery-status-text" style="opacity:0.6;">Checking status...</div>
+            </div>
+        </div>
+
+        <!-- 6. Performance Tab -->
+        <div id="tab-performance" class="settings-tab">
+            <h2 class="settings-title">Performance</h2>
+            <div class="settings-card">
+                <div class="ios-list-item">
+                    <div class="ios-list-label">Reduce Transparency</div>
+                    <input type="checkbox" id="perf-reduce-blur" onchange="togglePerformanceSetting('reduce_blur', this.checked)">
+                </div>
+                <div class="settings-divider"></div>
+                <div class="ios-list-item">
+                    <div class="ios-list-label">Reduce Motion</div>
+                    <input type="checkbox" id="perf-reduce-motion" onchange="togglePerformanceSetting('reduce_motion', this.checked)">
+                </div>
+            </div>
+            <p style="font-size:0.75rem; opacity:0.5; padding:0 15px;">Optimize for low-end hardware by disabling heavy visual effects.</p>
+        </div>
+
+        <!-- 7. Profile Tab -->
+        <div id="tab-profile" class="settings-tab">
+            <h2 class="settings-title">User Profile</h2>
+            <div class="settings-card">
+                <div class="settings-row">
+                    <span>Display Name</span>
+                    <input type="text" class="macos-input" id="setting-name" placeholder="User" onchange="saveSettings()">
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. About Tab -->
+        <div id="tab-about" class="settings-tab">
+            <div style="text-align:center; margin-bottom:30px; margin-top:20px;">
+                <i class="fab fa-apple" style="font-size:4rem; margin-bottom:15px;"></i>
+                <h2 id="sys-model-name" style="font-size:1.5rem; font-weight:700;">Dương Mac</h2>
+                <p id="sys-os-version" style="opacity:0.6; font-size:0.9rem;">macOS Sequoia</p>
+            </div>
+            <div class="settings-card">
+                <div class="ios-list-item">
+                    <div class="ios-list-label">Processor</div>
+                    <span style="opacity:0.5;" id="sys-cpu">Apple Silicon</span>
+                </div>
+                <div class="settings-divider"></div>
+                <div class="ios-list-item">
+                    <div class="ios-list-label">Memory</div>
+                    <span style="opacity:0.5;">16 GB (Unified)</span>
+                </div>
+                <div class="settings-divider"></div>
+                <div class="ios-list-item">
+                    <div class="ios-list-label">Serial Number</div>
+                    <span style="opacity:0.5;" id="sys-serial">DY-69-Dương-DEV</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 9. Sound Tab -->
+        <div id="tab-sound" class="settings-tab">
+            <h2 class="settings-title">Sound</h2>
+            <div class="settings-card">
+                <div class="settings-row" style="flex-direction:column; align-items:flex-start; gap:15px;">
+                    <span>Output Volume</span>
+                    <input type="range" min="0" max="100" value="60" style="width:100%; accent-color:var(--accent-blue);" oninput="setSystemVolume(this.value)">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

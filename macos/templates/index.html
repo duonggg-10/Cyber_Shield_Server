@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dương OS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=6.1">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+
+    <!-- Wallpaper Layer -->
+    <div class="wallpaper" id="wallpaper"></div>
+
+    <!-- LOCK SCREEN -->
+    <div id="lock-screen" onclick="unlockSystem()">
+        <div class="lock-time" id="lock-time">14:32</div>
+        <div class="lock-date" id="lock-date">Thursday, January 8</div>
+        <div class="swipe-hint">
+            <div style="font-size: 0.9rem; font-weight: 500;">Swipe up to unlock</div>
+            <div class="swipe-bar-hint"></div>
+        </div>
+    </div>
+
+    <!-- MAIN INTERFACE -->
+    <div id="os-interface">
+        
+        <!-- MACOS MENU BAR (Desktop Only) -->
+        <div class="macos-menubar">
+            <div class="menubar-left">
+                <span onclick="toggleMenu('apple-menu')">
+                    <i class="fab fa-apple" style="font-size: 1.1rem;"></i>
+                    <div id="apple-menu" class="dropdown-menu">
+                        <div class="dropdown-item" onclick="alert('Dương OS v2.0\nRunning on Cloud VPS')">About This Mac</div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-item">System Settings...</div>
+                        <div class="dropdown-item">App Store...</div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-item" onclick="location.reload()">Restart...</div>
+                        <div class="dropdown-item" onclick="location.href='/duongdev'">Shut Down...</div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-item" onclick="location.reload()">Lock Screen <span style="opacity:0.5;">^⌘Q</span></div>
+                    </div>
+                </span>
+                <span style="font-weight: 700;" onclick="toggleMenu('finder-menu')">
+                    Finder
+                    <div id="finder-menu" class="dropdown-menu">
+                        <div class="dropdown-item">About Finder</div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-item">Preferences... <span style="opacity:0.5;">⌘,</span></div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-item">Empty Trash...</div>
+                    </div>
+                </span>
+                <span onclick="toggleMenu('file-menu')">
+                    File
+                    <div id="file-menu" class="dropdown-menu">
+                        <div class="dropdown-item">New Finder Window <span style="opacity:0.5;">⌘N</span></div>
+                        <div class="dropdown-item">New Folder <span style="opacity:0.5;">⇧⌘N</span></div>
+                        <div class="dropdown-item">Open <span style="opacity:0.5;">⌘O</span></div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-item">Get Info <span style="opacity:0.5;">⌘I</span></div>
+                        <div class="dropdown-item">Print... <span style="opacity:0.5;">⌘P</span></div>
+                    </div>
+                </span>
+                <span onclick="toggleMenu('edit-menu')">
+                    Edit
+                    <div id="edit-menu" class="dropdown-menu">
+                        <div class="dropdown-item">Undo <span style="opacity:0.5;">⌘Z</span></div>
+                        <div class="dropdown-item">Redo <span style="opacity:0.5;">⇧⌘Z</span></div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-item">Cut <span style="opacity:0.5;">⌘X</span></div>
+                        <div class="dropdown-item">Copy <span style="opacity:0.5;">⌘C</span></div>
+                        <div class="dropdown-item">Paste <span style="opacity:0.5;">⌘V</span></div>
+                        <div class="dropdown-item">Select All <span style="opacity:0.5;">⌘A</span></div>
+                    </div>
+                </span>
+                <span onclick="toggleMenu('view-menu')">
+                    View
+                    <div id="view-menu" class="dropdown-menu">
+                        <div class="dropdown-item">as Icons <span style="opacity:0.5;">⌘1</span></div>
+                        <div class="dropdown-item">as List <span style="opacity:0.5;">⌘2</span></div>
+                        <div class="dropdown-item">as Columns <span style="opacity:0.5;">⌘3</span></div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-item">Clean Up</div>
+                        <div class="dropdown-item">Show View Options</div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-item" onclick="document.documentElement.requestFullscreen()">Enter Full Screen</div>
+                    </div>
+                </span>
+                <span onclick="toggleMenu('go-menu')">
+                    Go
+                    <div id="go-menu" class="dropdown-menu">
+                        <div class="dropdown-item">Back <span style="opacity:0.5;">⌘[</span></div>
+                        <div class="dropdown-item">Forward <span style="opacity:0.5;">⌘]</span></div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-item">Recents <span style="opacity:0.5;">⇧⌘F</span></div>
+                        <div class="dropdown-item">Documents <span style="opacity:0.5;">⇧⌘O</span></div>
+                        <div class="dropdown-item">Desktop <span style="opacity:0.5;">⇧⌘D</span></div>
+                        <div class="dropdown-item">Downloads <span style="opacity:0.5;">⌥⌘L</span></div>
+                    </div>
+                </span>
+                <span onclick="toggleMenu('window-menu')">
+                    Window
+                    <div id="window-menu" class="dropdown-menu">
+                        <div class="dropdown-item">Minimize <span style="opacity:0.5;">⌘M</span></div>
+                        <div class="dropdown-item">Zoom</div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-item">Bring All to Front</div>
+                    </div>
+                </span>
+                <span onclick="toggleMenu('help-menu')">
+                    Help
+                    <div id="help-menu" class="dropdown-menu">
+                        <div class="dropdown-item">Dương OS Help</div>
+                        <div class="dropdown-item">See What's New in macOS</div>
+                    </div>
+                </span>
+            </div>
+            <div class="menubar-right">
+                <i class="fas fa-battery-full"></i>
+                <i class="fas fa-wifi"></i>
+                <i class="fas fa-search"></i>
+                <i class="fas fa-sliders-h" onclick="toggleMenu('control-center')"></i>
+                <span id="menubar-clock">Thu Jan 8 14:32</span>
+            </div>
+        </div>
+
+        <!-- Dynamic Island (Mobile Only) -->
+        <div class="status-bar-area">
+            <div class="dynamic-island" id="dynamic-island" onclick="toggleIsland()" oncontextmenu="event.preventDefault(); sendSystemPing();">
+                <div class="di-notch"></div>
+                <div class="di-content">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <img src="{{ url_for('static', filename='avatar.png') }}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/847/847969.png'" style="width:24px; height:24px; border-radius:50%;">
+                        <span style="font-size:0.8rem; font-weight:600;">System</span>
+                    </div>
+                    <div id="wave-viz" style="display:flex; gap:3px; height:15px; align-items:flex-end;">
+                        <div style="width:3px; height:100%; background:#0f0; animation: bounce 0.5s infinite;"></div>
+                        <div style="width:3px; height:60%; background:#0f0; animation: bounce 0.7s infinite;"></div>
+                        <div style="width:3px; height:80%; background:#0f0; animation: bounce 0.6s infinite;"></div>
+                        <div style="width:3px; height:40%; background:#0f0; animation: bounce 0.8s infinite;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="home-screen">
+            <!-- Widgets -->
+            <div class="widget-row">
+                <div class="widget widget-wide" style="background: linear-gradient(135deg, rgba(41, 151, 255, 0.2), rgba(41, 151, 255, 0.1));">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div>
+                            <div style="font-size:0.9rem; font-weight:700; color:#2997FF; margin-bottom:5px;">WELCOME BACK</div>
+                            <div style="font-size:2rem; font-weight:800; line-height:1.2;" id="welcome-name">{{ user_name }}</div>
+                        </div>
+                        <i class="fas fa-user-circle" style="color:#2997FF; font-size:1.5rem;"></i>
+                    </div>
+                    <div style="font-size:0.9rem; opacity:0.6; align-self:flex-end;">System is ready for use</div>
+                </div>
+                
+                <div class="widget widget-sq" style="background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));">
+                    <i id="weather-icon" class="fas fa-circle-notch fa-spin" style="font-size:2.5rem; color:#F6D365;"></i>
+                    <div style="margin-top:auto;">
+                        <div style="font-size:1.2rem; font-weight:600;" id="weather-temp">--°C</div>
+                        <div style="font-size:0.7rem; opacity:0.7;" id="weather-desc">Loading...</div>
+                    </div>
+                </div>
+                
+                <div class="widget widget-sq" style="position:relative; overflow:hidden;" onclick="openApp('photos')">
+                    <div id="memories-slideshow" style="position:absolute; inset:0; width:100%; height:100%;">
+                        <!-- Slides will be injected by JS -->
+                        <div class="memory-slide active" style="background-image: url('https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1000&auto=format&fit=crop');"></div>
+                    </div>
+                    <div style="position:relative; z-index:5; height:100%; display:flex; flex-direction:column; justify-content:flex-end; padding: 15px; background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);">
+                        <div style="font-size:0.8rem; font-weight:700; letter-spacing: 1px;">MEMORIES</div>
+                    </div>
+                </div>
+
+    <!-- CONTEXT MENU (Hidden by default) -->
+    <div id="gallery-context-menu" class="context-menu">
+        <div class="context-item" onclick="handleContextMenuAction('wallpaper')">
+            <i class="fas fa-desktop"></i> Set as Wallpaper
+        </div>
+        <div class="context-divider"></div>
+        <div class="context-item delete" onclick="handleContextMenuAction('delete')">
+            <i class="fas fa-trash-alt"></i> Delete Photo
+        </div>
+    </div>
+            </div>
+
+            <!-- Apps Grid -->
+            <div class="app-grid">
+                <!-- Row 1 -->
+                <div class="app-icon-container" onclick="openApp('photos')">
+                    <div class="app-icon icon-photos"><i class="fas fa-images"></i></div>
+                    <span class="app-label">Photos</span>
+                </div>
+                <div class="app-icon-container" onclick="openApp('notes')">
+                    <div class="app-icon icon-notes"><i class="fas fa-sticky-note"></i></div>
+                    <span class="app-label">Notes</span>
+                </div>
+                <div class="app-icon-container" onclick="openApp('music')">
+                    <div class="app-icon icon-music"><i class="fas fa-music"></i></div>
+                    <span class="app-label">Music</span>
+                </div>
+                <div class="app-icon-container" onclick="openApp('browser')">
+                    <div class="app-icon" style="background: linear-gradient(135deg, #00C6FF, #0072FF);"><i class="fas fa-globe"></i></div>
+                    <span class="app-label">Safari</span>
+                </div>
+                <div class="app-icon-container" onclick="openApp('ai')">
+                    <div class="app-icon" style="background: #000; position: relative; overflow: hidden;">
+                        <svg viewBox="0 0 100 100" style="width:70%; height:70%; filter: blur(2px);">
+                            <defs>
+                                <radialGradient id="siri-grad" cx="50%" cy="50%" r="50%">
+                                    <stop offset="0%" style="stop-color:#fff;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#2997ff;stop-opacity:0" />
+                                </radialGradient>
+                            </defs>
+                            <circle cx="50%" cy="50%" r="35" fill="url(#siri-grad)">
+                                <animate attributeName="r" values="35;40;35" dur="3s" repeatCount="indefinite" />
+                                <animate attributeName="opacity" values="0.6;1;0.6" dur="3s" repeatCount="indefinite" />
+                            </circle>
+                            <circle cx="50%" cy="50%" r="25" fill="#fff" opacity="0.2">
+                                <animate attributeName="r" values="25;30;25" dur="2s" repeatCount="indefinite" />
+                            </circle>
+                        </svg>
+                    </div>
+                    <span class="app-label">Siri</span>
+                </div>
+                <div class="app-icon-container" onclick="openApp('calendar')">
+                    <div class="app-icon" style="background: linear-gradient(135deg, #ff3b30, #ff9500);"><i class="fas fa-calendar-alt"></i></div>
+                    <span class="app-label">Calendar</span>
+                </div>
+
+                <!-- Row 2 -->
+                <div class="app-icon-container" onclick="openApp('wallet')">
+                    <div class="app-icon" style="background: linear-gradient(135deg, #1c1c1e, #2c2c2e); border: 1px solid rgba(255,255,255,0.1);"><i class="fas fa-wallet" style="color: #fff;"></i></div>
+                    <span class="app-label">Wallet</span>
+                </div>
+                <div class="app-icon-container" onclick="openApp('maps')">
+                    <div class="app-icon" style="background: linear-gradient(135deg, #34c759, #30d158);"><i class="fas fa-map-marked-alt"></i></div>
+                    <span class="app-label">Maps</span>
+                </div>
+                <a href="https://www.facebook.com/duong.pham.946940/" target="_blank" class="app-icon-container">
+                    <div class="app-icon" style="background: linear-gradient(135deg, #00C6FF, #0072FF);"><i class="fab fa-facebook-messenger"></i></div>
+                    <span class="app-label">Messenger</span>
+                </a>
+                
+                <!-- Row 3 -->
+                <div class="app-icon-container" onclick="openApp('settings')">
+                    <div class="app-icon icon-settings"><i class="fas fa-cog"></i></div>
+                    <span class="app-label">Settings</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dock -->
+        <div class="dock-wrapper">
+            <div class="dock-container">
+                <div class="dock-item" id="dock-music" onclick="openApp('music')">
+                    <div class="app-icon" style="background: linear-gradient(135deg, #2c3e50, #3498db); width:50px; height:50px; font-size:1.3rem;"><i class="fas fa-phone"></i></div>
+                    <div class="app-indicator"></div>
+                </div>
+                <div class="dock-item" id="dock-browser" onclick="openApp('browser')">
+                    <div class="app-icon" style="background: linear-gradient(135deg, #00C6FF, #0072FF); width:50px; height:50px; font-size:1.3rem;"><i class="fas fa-globe"></i></div>
+                    <div class="app-indicator"></div>
+                </div>
+                <div class="dock-item" id="dock-photos" onclick="openApp('photos')">
+                    <div class="app-icon" style="background: linear-gradient(135deg, #FFCC00, #FF9500); width:50px; height:50px; font-size:1.3rem;"><i class="fas fa-images"></i></div>
+                    <div class="app-indicator"></div>
+                </div>
+                <div class="dock-item" id="dock-ai" onclick="openApp('ai')">
+                    <div class="app-icon" style="background: #000; width:50px; height:50px; font-size:1.3rem;">
+                        <svg viewBox="0 0 100 100" style="width:60%; height:60%;"><circle cx="50%" cy="50%" r="40" fill="url(#siri-grad)" /></svg>
+                    </div>
+                    <div class="app-indicator"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- === APPS LAYERS === -->
+
+    <!-- 2. PHOTOS APP -->
+    <div id="app-photos" class="app-window">
+                <div class="app-header">
+                    <div class="window-controls">
+                        <div class="win-btn win-close" onclick="closeApp('photos')"></div>
+                        <div class="win-btn win-min" onclick="minimizeApp('$1')"></div>
+                        <div class="win-btn win-max"></div>
+                    </div>
+                    <span>Photos</span>
+                    <label for="upload-input" style="color:var(--accent-blue); font-size:1.1rem; cursor:pointer;"><i class="fas fa-plus"></i></label>
+                </div>
+                <div style="display:flex; padding: 10px 20px; gap: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.5);">
+                    <div style="font-weight:700; color:var(--accent-blue); cursor:pointer;">Library</div>
+                    <div style="opacity:0.6; cursor:pointer;">Albums</div>
+                    <div style="opacity:0.6; cursor:pointer;">For You</div>
+                </div>
+                <div id="upload-progress-container"
+         style="display:none; padding: 10px 24px; background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05);">
+            <div style="display:flex; justify-content:space-between; font-size:0.7rem; margin-bottom:6px; opacity:0.8;">
+                <span id="upload-status">Uploading memories...</span>
+                <span id="upload-pc">0%</span>
+            </div>
+            <div style="width:100%; height:3px; background:rgba(255,255,255,0.1); border-radius:10px; overflow:hidden;">
+                <div id="upload-bar" style="width:0%; height:100%; background:var(--accent-blue); transition:width 0.2s;"></div>
+            </div>
+        </div>
+        <div class="app-body">
+            <div class="photo-grid-container" id="photo-grid">
+                {% for photo in photos %}
+                    {% set ext = photo.filename.split('.')[-1].lower() %}
+                    <div class="media-item" 
+                         data-url="{{ url_for('static', filename='uploads/' + photo.filename) }}" 
+                         data-type="{{ ext }}" 
+                         data-id="{{ photo.id }}"
+                         onclick="openLightbox(this.dataset.url, this.dataset.type, this.dataset.id)">
+                        {% if ext in ['mp4', 'mov', 'avi', 'webm'] %}
+                            <video src="{{ url_for('static', filename='uploads/' + photo.filename) }}#t=0.1" preload="none" muted playsinline style="pointer-events:none;"></video>
+                            <div class="video-badge"><i class="fas fa-play" style="font-size:0.7rem;"></i></div>
+                        {% else %}
+                            <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" loading="lazy">
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="home-bar" onclick="closeApp('photos')"></div>
+    </div>
+
+    <!-- LIGHTBOX -->
+    <div id="lightbox" class="lightbox">
+        <div class="lightbox-controls">
+            <div class="lb-btn" onclick="handleLightboxAction('wallpaper')"><i class="fas fa-desktop" style="font-size:1.2rem;"></i></div>
+            <div class="lb-btn" onclick="handleLightboxAction('delete')"><i class="fas fa-trash"></i></div>
+            <div class="lb-btn" onclick="closeLightbox()"><i class="fas fa-times-circle"></i></div>
+        </div>
+        <div id="lightbox-container" style="width:100%; height:100%; display:flex; justify-content:center; align-items:center;">
+            <!-- Content injected via JS -->
+        </div>
+    </div>
+
+    <!-- 3. NOTES APP -->
+    <div id="app-notes" class="app-window">
+        <div class="app-header">
+            <div class="window-controls">
+                <div class="win-btn win-close" onclick="closeApp('notes')"></div>
+                <div class="win-btn win-min" onclick="minimizeApp('$1')"></div>
+                <div class="win-btn win-max"></div>
+            </div>
+            <span>Notes</span>
+        </div>
+        <div class="app-body">
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <input type="text" id="new-note-input" placeholder="New thought..." 
+                       style="flex:1; background:#1c1c1e; border:none; padding:12px; border-radius:12px; color:white;">
+                <button onclick="addNote()" style="background:var(--accent-blue); border:none; width:40px; border-radius:12px; color:white;"><i class="fas fa-arrow-up"></i></button>
+            </div>
+            <div id="notes-list"></div>
+        </div>
+        <div class="home-bar" onclick="closeApp('notes')"></div>
+    </div>
+
+    <!-- 4. MUSIC APP -->
+    <div id="app-music" class="app-window">
+        <div class="music-bg-blur" id="music-bg"></div>
+        <div class="app-header" style="background:transparent; border:none;">
+            <div class="window-controls">
+                <div class="win-btn win-close" onclick="closeApp('music')"></div>
+                <div class="win-btn win-min" onclick="minimizeApp('$1')"></div>
+                <div class="win-btn win-max"></div>
+            </div>
+            <span style="opacity:0;">.</span>
+            <i class="fas fa-ellipsis-h"></i>
+        </div>
+        <div class="app-body player-ui">
+            <div class="album-art" id="music-cover" style="background-image: url('https://c.saavncdn.com/generic_images/Chill1_20201127_500x500.jpg');"></div>
+            <div style="text-align:center; margin-top: 10px;">
+                <h2 style="font-size: 1.8rem; font-weight: 700; margin-bottom: 5px;">System Player</h2>
+                <p style="color: rgba(255,255,255,0.6); font-size: 1.1rem;">Artist</p>
+            </div>
+            <div style="width: 100%; padding: 0 10px;">
+                <div class="progress-container" onclick="seekMusic(event)">
+                    <div class="progress-bg"><div class="progress-fill" id="music-progress"></div></div>
+                </div>
+                <div class="time-display"><span id="music-curr">0:00</span><span id="music-dur">0:00</span></div>
+            </div>
+            <div style="display: flex; gap: 50px; font-size: 2.2rem; align-items: center; margin-top: 10px;">
+                <i class="fas fa-backward-step" style="cursor:pointer;" onclick="player.previousVideo()"></i>
+                <i class="fas fa-play-circle" style="font-size: 4.5rem; cursor:pointer;" onclick="togglePlay()" id="play-btn"></i>
+                <i class="fas fa-forward-step" style="cursor:pointer;" onclick="player.nextVideo()"></i>
+            </div>
+        </div>
+        <div class="home-bar" onclick="closeApp('music')"></div>
+    </div>
+
+    <!-- 5. CALENDAR APP -->
+    <div id="app-calendar" class="app-window">
+        <div class="app-header">
+            <div class="window-controls">
+                <div class="win-btn win-close" onclick="closeApp('calendar')"></div>
+                <div class="win-btn win-min" onclick="minimizeApp('$1')"></div>
+                <div class="win-btn win-max"></div>
+            </div>
+            <span>Calendar</span>
+            <i class="fas fa-plus" style="color:var(--accent-blue); font-size:1.2rem;" onclick="addEventPrompt()"></i>
+        </div>
+        <div class="app-body">
+            <div style="margin-bottom: 20px;">
+                <h2 id="calendar-month-year" style="font-size: 2rem; font-weight: 700;">Month Year</h2>
+            </div>
+            <div id="calendar-view" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; text-align: center;"></div>
+            <div style="margin-top: 30px;">
+                <div class="settings-header">UPCOMING EVENTS</div>
+                <div class="settings-group" id="events-list"></div>
+            </div>
+        </div>
+        <div class="home-bar" onclick="closeApp('calendar')"></div>
+    </div>
+
+    <!-- 6. MAPS APP -->
+    <div id="app-maps" class="app-window">
+        <div class="app-header">
+            <div class="window-controls">
+                <div class="win-btn win-close" onclick="closeApp('maps')"></div>
+                <div class="win-btn win-min" onclick="minimizeApp('$1')"></div>
+                <div class="win-btn win-max"></div>
+            </div>
+            <span>Maps</span>
+            <i class="fas fa-map-marker-alt" style="color:var(--accent-blue); font-size:1.2rem;" onclick="addCurrentLocation()"></i>
+        </div>
+        <div style="flex:1; position:relative;">
+            <div id="map-container" style="width: 100%; height: 100%;"></div>
+        </div>
+        <div class="home-bar" onclick="closeApp('maps')"></div>
+    </div>
+
+    <!-- 8. WALLET APP -->
+    <div id="app-wallet" class="app-window">
+        <div class="app-header" style="background: rgba(242, 242, 247, 0.8); color: #000; border-bottom: 1px solid #d1d1d6;">
+            <div class="window-controls">
+                <div class="win-btn win-close" onclick="closeApp('wallet')"></div>
+                <div class="win-btn win-min" onclick="minimizeApp('$1')"></div>
+                <div class="win-btn win-max"></div>
+            </div>
+            <span>Wallet</span>
+            <i class="fas fa-plus" style="color: #007aff; font-size:1.2rem; cursor: pointer;" onclick="addTransactionPrompt()"></i>
+        </div>
+        <div class="app-body" style="background: #f2f2f7; color: #000;">
+            
+            <div style="padding: 20px 0;">
+                <!-- Apple Card Style -->
+                <div class="wallet-card" style="background: linear-gradient(135deg, #000, #333); color: white; border-radius: 16px; padding: 20px; height: 180px; display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div style="font-weight: 600; font-size: 1.1rem;">System Card</div>
+                        <i class="fab fa-apple-pay" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.8rem; opacity: 0.7; letter-spacing: 1px;">TOTAL SPENT</div>
+                        <div style="font-size: 2.2rem; font-weight: 700;" id="wallet-total">0 ₫</div>
+                    </div>
+                </div>
+
+                <!-- Chart -->
+                <div style="background: white; border-radius: 12px; padding: 15px; margin-bottom: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                    <canvas id="spendingChart" height="250"></canvas>
+                </div>
+
+                <!-- Transactions -->
+                <div style="font-size: 0.9rem; color: #666; margin-bottom: 10px; padding-left: 5px; font-weight: 600;">LATEST TRANSACTIONS</div>
+                <div id="transaction-list" style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                    <!-- Items injected via JS -->
+                </div>
+            </div>
+
+        </div>
+        <div class="home-bar" onclick="closeApp('wallet')" style="background: #000;"></div>
+    </div>
+
+    <!-- 7. SYSTEM SETTINGS APP -->
+    <div id="app-settings" class="app-window" style="background: #1e1e1e; color: white;">
+        <div class="app-header" style="background: rgba(45, 45, 45, 0.8); height: 52px; padding: 0 15px; align-items: center; border-bottom: 0.5px solid #000; justify-content: flex-start;">
+            <div class="window-controls">
+                <div class="win-btn win-close" onclick="closeApp('settings')"></div>
+                <div class="win-btn win-min" onclick="minimizeApp('settings')"></div>
+                <div class="win-btn win-max" onclick="maximizeApp('settings')"></div>
+            </div>
+            <div id="settings-back-btn" class="mobile-only" onclick="showSettingsSidebar()" style="margin-left: 15px; display: none;">
+                <i class="fas fa-chevron-left"></i> Back
+            </div>
+            <span id="settings-header-title" style="font-size: 0.9rem; font-weight: 600; margin-left: 20px;">System Settings</span>
+        </div>
+        <div class="app-body" style="padding: 0; display: flex; height: calc(100% - 52px); overflow: hidden;">
+            <!-- Sidebar -->
+            <div class="settings-sidebar">
+                <div class="sidebar-item active" onclick="switchSettingsTab('appearance')"><i class="fas fa-palette"></i> Appearance</div>
+                <div class="sidebar-item" onclick="switchSettingsTab('desktop')"><i class="fas fa-desktop"></i> Desktop & Dock</div>
+                <div class="sidebar-item" onclick="switchSettingsTab('network')"><i class="fas fa-wifi"></i> Network</div>
+                <div class="sidebar-item" onclick="switchSettingsTab('storage')"><i class="fas fa-hdd"></i> Storage</div>
+                <div class="sidebar-item" onclick="switchSettingsTab('battery')"><i class="fas fa-battery-half"></i> Battery</div>
+                <div class="sidebar-item" onclick="switchSettingsTab('profile')"><i class="fas fa-user-circle"></i> User Profile</div>
+                <div class="sidebar-item" onclick="switchSettingsTab('about')"><i class="fas fa-info-circle"></i> General</div>
+                <div class="sidebar-item" onclick="switchSettingsTab('sound')"><i class="fas fa-volume-up"></i> Sound</div>
+                <div class="sidebar-item" onclick="switchSettingsTab('performance')"><i class="fas fa-tachometer-alt"></i> Performance</div>
+            </div>
+            <!-- Main Content -->
+            <div class="settings-content" id="settings-main-content">
+                <!-- Performance Tab (QUAN TRỌNG CHO MÁY TRƯỜNG) -->
+                <div id="tab-performance" class="settings-tab">
+                    <h2 class="settings-title">Accessibility & Performance</h2>
+                    <div class="settings-card">
+                        <div class="ios-list-item">
+                            <div class="ios-list-label">Reduce Transparency</div>
+                            <input type="checkbox" id="perf-reduce-blur" onchange="togglePerformanceSetting('reduce_blur', this.checked)">
+                        </div>
+                        <div class="settings-divider"></div>
+                        <div class="ios-list-item">
+                            <div class="ios-list-label">Reduce Motion (Animations)</div>
+                            <input type="checkbox" id="perf-reduce-motion" onchange="togglePerformanceSetting('reduce_motion', this.checked)">
+                        </div>
+                    </div>
+                    <p style="font-size:0.75rem; opacity:0.5; padding:0 15px;">Enabling these options will significantly improve speed on older computers by disabling heavy GPU filters and complex window animations.</p>
+                </div>
+                <!-- Appearance Tab -->
+                <div id="tab-appearance" class="settings-tab active">
+                    <h2 class="settings-title">Appearance</h2>
+                    <div class="settings-card">
+                        <div class="ios-list-item">
+                            <div class="ios-list-label"><i class="fas fa-tint" style="color:#007aff;"></i> Accent Color</div>
+                            <div class="color-options">
+                                <div class="color-swatch" style="background:#2997FF;" onclick="setAccent('#2997FF')"></div>
+                                <div class="color-swatch" style="background:#FF2D55;" onclick="setAccent('#FF2D55')"></div>
+                                <div class="color-swatch" style="background:#30D158;" onclick="setAccent('#30D158')"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Network Tab (THỰC DỤNG) -->
+                <div id="tab-network" class="settings-tab">
+                    <h2 class="settings-title">Network</h2>
+                    <div class="settings-card">
+                        <div class="ios-list-item">
+                            <div class="ios-list-label">Local IP Address</div>
+                            <span id="net-ip" style="opacity:0.5;">Detecting...</span>
+                        </div>
+                        <div class="settings-divider"></div>
+                        <div class="ios-list-item">
+                            <div class="ios-list-label">Status</div>
+                            <span style="color:#30D158; font-weight:600;">Connected</span>
+                        </div>
+                    </div>
+                    <div class="settings-card">
+                        <div class="settings-row" style="flex-direction:column; align-items:flex-start;">
+                            <span style="font-weight:600; margin-bottom:10px;">Ping Test (Bypass Check)</span>
+                            <div style="display:flex; gap:10px; width:100%;">
+                                <input type="text" id="ping-url" class="macos-input" value="google.com" style="flex:1;">
+                                <button class="macos-btn" onclick="runPingTest()">Test</button>
+                            </div>
+                            <div id="ping-results" style="margin-top:15px; font-family:monospace; font-size:0.75rem; opacity:0.7; width:100%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Storage Tab -->
+                <div id="tab-storage" class="settings-tab">
+                    <h2 class="settings-title">Storage</h2>
+                    <div class="settings-card" style="padding:20px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                            <span style="font-weight:600;">System Drive</span>
+                            <span id="storage-percent" style="opacity:0.6;">0% used</span>
+                        </div>
+                        <div style="width:100%; height:8px; background:rgba(255,255,255,0.1); border-radius:10px; overflow:hidden; margin-bottom:20px;">
+                            <div id="storage-bar" style="width:0%; height:100%; background:var(--accent-blue);"></div>
+                        </div>
+                        <div class="ios-list-item" style="padding:10px 0;">
+                            <div class="ios-list-label">Photos & Videos</div>
+                            <span id="stat-photos">0 items</span>
+                        </div>
+                        <div class="ios-list-item" style="padding:10px 0;">
+                            <div class="ios-list-label">Notes & Docs</div>
+                            <span id="stat-notes">0 items</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Battery Tab (THỰC TẾ) -->
+                <div id="tab-battery" class="settings-tab">
+                    <h2 class="settings-title">Battery</h2>
+                    <div style="text-align:center; padding:30px 0;">
+                        <i id="battery-icon-big" class="fas fa-battery-full" style="font-size:4rem; color:#30D158;"></i>
+                        <div id="battery-level-big" style="font-size:2.5rem; font-weight:700; margin-top:10px;">100%</div>
+                        <div id="battery-status-text" style="opacity:0.6;">Power Adapter Connected</div>
+                    </div>
+                </div>
+
+                <!-- Desktop Tab -->
+                <div id="tab-desktop" class="settings-tab">
+                    <h2 class="settings-title">Desktop & Dock</h2>
+                    <div class="settings-card">
+                        <div class="settings-row" style="flex-direction:column; align-items:flex-start; gap:10px;">
+                            <span>Wallpaper URL</span>
+                            <input type="text" class="macos-input" id="setting-wallpaper" placeholder="Paste image URL..." onchange="saveSettings()">
+                        </div>
+                        <div class="settings-divider"></div>
+                        <div class="settings-row" style="padding: 15px 18px; display:flex; gap:10px;">
+                            <label class="macos-btn" for="wallpaper-upload">Upload Image</label>
+                            <button class="macos-btn" style="background:#ff3b30;" onclick="deleteWallpaper()">Delete Wallpaper</button>
+                            <input type="file" id="wallpaper-upload" accept="image/*" class="hidden" onchange="uploadWallpaper(this)">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Tab -->
+                <div id="tab-profile" class="settings-tab">
+                    <h2 class="settings-title">User Profile</h2>
+                    <div class="settings-card">
+                        <div class="settings-row">
+                            <span>Display Name</span>
+                            <input type="text" class="macos-input" id="setting-name" placeholder="Dương" onchange="saveSettings()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- General Tab (About) -->
+                <div id="tab-about" class="settings-tab">
+                    <div style="text-align:center; margin-bottom:30px; margin-top:20px;">
+                        <i class="fab fa-apple" style="font-size:4rem; margin-bottom:15px;"></i>
+                        <h2 id="sys-model-name" style="font-size:1.5rem; font-weight:700;">MacBook Pro</h2>
+                        <p id="sys-os-version" style="opacity:0.6; font-size:0.9rem;">macOS Sequoia 15.2</p>
+                    </div>
+                    
+                    <div class="settings-card">
+                        <div class="ios-list-item">
+                            <div class="ios-list-label">Processor</div>
+                            <span style="opacity:0.5;" id="sys-cpu">Apple M4 Max</span>
+                        </div>
+                        <div class="settings-divider"></div>
+                        <div class="ios-list-item">
+                            <div class="ios-list-label">Memory</div>
+                            <span style="opacity:0.5;">64 GB</span>
+                        </div>
+                        <div class="settings-divider"></div>
+                        <div class="ios-list-item">
+                            <div class="ios-list-label">Serial Number</div>
+                            <span style="opacity:0.5;" id="sys-serial">DY-69-Dương-DEV</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sound Tab -->
+                <div id="tab-sound" class="settings-tab">
+                    <h2 class="settings-title">Sound</h2>
+                    <div class="settings-card">
+                        <div class="settings-row" style="flex-direction:column; align-items:flex-start; gap:15px;">
+                            <span>Output Volume</span>
+                            <input type="range" min="0" max="100" value="60" style="width:100%; accent-color:var(--accent-blue);" oninput="setSystemVolume(this.value)">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 9. BROWSER APP (SAFARI) -->
+    <div id="app-browser" class="app-window">
+        <div class="safari-header">
+            <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+                <div class="window-controls">
+                    <div class="win-btn win-close" onclick="closeApp('browser')"></div>
+                    <div class="win-btn win-min" onclick="minimizeApp('$1')"></div>
+                    <div class="win-btn win-max"></div>
+                </div>
+                <div style="display:flex; gap:15px; opacity:0.6;"><i class="fas fa-layer-group"></i><i class="fas fa-plus"></i><i class="fas fa-share"></i></div>
+            </div>
+            <div class="safari-toolbar">
+                <div style="display:flex; gap:20px;">
+                    <i class="fas fa-chevron-left safari-btn" onclick="document.getElementById('browser-iframe').contentWindow.history.back()"></i>
+                    <i class="fas fa-chevron-right safari-btn" onclick="document.getElementById('browser-iframe').contentWindow.history.forward()"></i>
+                </div>
+                <div class="safari-address-bar">
+                    <i class="fas fa-lock" style="font-size:0.7rem; margin-right:8px; opacity:0.4;"></i>
+                    <input type="text" id="browser-url-input" value="https://google.com/search?igu=1" onkeypress="if(event.key==='Enter') navigateBrowser()">
+                    <i class="fas fa-redo safari-btn" style="font-size:0.7rem; margin-left:8px;" onclick="navigateBrowser()"></i>
+                </div>
+                <i class="fas fa-sidebar safari-btn"></i>
+            </div>
+        </div>
+        <div class="app-body" style="padding:0; background:#fff;">
+            <iframe id="browser-iframe" src="https://google.com/search?igu=1" style="width:100%; height:100%; border:none;"></iframe>
+        </div>
+    </div>
+
+    <!-- 10. AI ASSISTANT (SIRI) -->
+    <div id="app-ai" class="app-window" style="background: rgba(10,10,10,0.9); backdrop-filter: blur(40px);">
+        <div class="app-header" style="background: transparent; border: none; padding-top: 50px;">
+            <div class="window-controls">
+                <div class="win-btn win-close" onclick="closeApp('ai')"></div>
+                <div class="win-btn win-min" onclick="minimizeApp('$1')"></div>
+                <div class="win-btn win-max"></div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div style="width:30px; height:30px; background:#000; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+                    <svg viewBox="0 0 100 100" style="width:80%; height:80%;">
+                        <circle cx="50%" cy="50%" r="40" fill="url(#siri-grad)" />
+                    </svg>
+                </div>
+                <span style="font-size:1.1rem; font-weight:700; letter-spacing:-0.5px;">Siri</span>
+            </div>
+            <i class="fas fa-trash-alt" onclick="clearAiChat()" style="font-size:0.9rem; opacity:0.5; cursor:pointer;"></i>
+        </div>
+        <div class="app-body" style="display:flex; flex-direction:column; padding: 10px 20px;">
+            <div style="margin-bottom:20px;">
+                <select id="ai-model-select" style="background: rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.2); padding:5px 10px; border-radius:8px; font-size:0.8rem;">
+                    <option value="gpt-5" style="background:#222;">OpenAI GPT-5</option>
+                    <option value="claude-4.6" style="background:#222;">Claude 4.6 Opus</option>
+                    <option value="gemini-2.5" style="background:#222;">Gemini 2.5 Pro</option>
+                    <option value="gpt-4o" selected style="background:#222;">GPT-4o (Standard)</option>
+                </select>
+            </div>
+            <div id="ai-chat-box" style="flex:1; overflow-y:auto; margin-bottom:20px; font-size:1.1rem; line-height:1.6; padding:0 10px;">
+                <div style="opacity:0.6; margin-top:20px;">I'm your Siri-style AI assistant powered by ByteZ SDK. Ask me anything about your system or the world.</div>
+            </div>
+            <div style="position:relative;">
+                <input type="text" id="ai-input" placeholder="Type a message..." 
+                       style="width:100%; background: rgba(255,255,255,0.1); border:none; border-radius:25px; padding:15px 50px 15px 25px; color:white; font-size:1.1rem;"
+                       onkeypress="if(event.key==='Enter') sendAiMessage()">
+                <i class="fas fa-paper-plane" onclick="sendAiMessage()" style="position:absolute; right:20px; top:18px; color:var(--accent-blue); cursor:pointer;"></i>
+            </div>
+        </div>
+        <div class="home-bar" onclick="closeApp('ai')"></div>
+    </div>
+
+    <!-- UTILS -->
+    <div id="youtube-player"></div>
+    <input type="file" id="upload-input" accept="image/*,video/*" multiple class="hidden">
+
+    <!-- Wallpaper Cropper Modal -->
+    <div id="cropper-modal" class="lightbox" style="z-index: 7000; background: rgba(0,0,0,0.9);">
+        <div style="width:92%; max-width:450px; background:#1c1c1e; border-radius:24px; overflow:hidden; display:flex; flex-direction:column; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
+            <div style="padding:18px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.1);">
+                <span style="font-weight:600; font-size:1.1rem;">Adjust Wallpaper</span>
+                <i class="fas fa-times" onclick="closeCropper()" style="cursor:pointer; opacity:0.6;"></i>
+            </div>
+            <div style="height: 450px; background:#000; display:flex; align-items:center; justify-content:center;">
+                <img id="cropper-image" style="max-width:100%; display:block;">
+            </div>
+            <div style="padding:20px; display:flex; gap:12px; background:#1c1c1e;">
+                <button class="settings-btn" style="margin:0; flex:1; background:#2c2c2e; color:white; border-radius:12px;" onclick="closeCropper()">Cancel</button>
+                <button class="settings-btn" style="margin:0; flex:1; background:var(--accent-blue); color:white; border-radius:12px;" onclick="applyCrop()">Set Wallpaper</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SONG_IDS = {{ song_ids | tojson }};
+    </script>
+    <script src="{{ url_for('static', filename='js/main.js') }}?v=6.1"></script>
+</body>
+</html>

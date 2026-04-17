@@ -1,0 +1,20 @@
+<div style="padding: 20px; background: #f2f2f7; color: #000; height: 100%;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 style="font-weight:700;">Wallet</h2>
+        <i class="fas fa-plus" style="color: #007aff; cursor: pointer;" onclick="addTransactionPrompt()"></i>
+    </div>
+    <div class="wallet-card" style="background: linear-gradient(135deg, #000, #333); color: white; border-radius: 16px; padding: 20px; height: 160px; display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+        <div style="display:flex; justify-content:space-between;">
+            <div style="font-weight: 600;">System Card</div>
+            <i class="fab fa-apple-pay" style="font-size: 2rem;"></i>
+        </div>
+        <div>
+            <div style="font-size: 0.7rem; opacity: 0.7; letter-spacing: 1px;">TOTAL SPENT</div>
+            <div style="font-size: 1.8rem; font-weight: 700;" id="wallet-total">0 ₫</div>
+        </div>
+    </div>
+    <div style="background: white; border-radius: 12px; padding: 10px; margin-bottom: 20px;">
+        <canvas id="spendingChart" height="200"></canvas>
+    </div>
+    <div id="transaction-list"></div>
+</div>

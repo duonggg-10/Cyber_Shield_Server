@@ -1,0 +1,23 @@
+<div class="music-bg-blur" id="music-bg" style="position: absolute; inset: 0; z-index: -1; background-size: cover; background-position: center; filter: blur(60px) brightness(0.4);"></div>
+<div class="player-ui" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 30px; padding: 20px;">
+    <div class="album-art" id="music-cover" style="width: 250px; height: 280px; border-radius: 20px; background-size: cover; background-position: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5);"></div>
+    <div style="text-align:center; margin-top: 10px;">
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">System Player</h2>
+        <p style="color: rgba(255,255,255,0.6); font-size: 1rem;">Artist</p>
+    </div>
+    <div style="width: 100%; padding: 0 20px;">
+        <div class="progress-container" onclick="seekMusic(event)" style="width: 100%; height: 20px; display: flex; align-items: center; cursor: pointer;">
+            <div class="progress-bg" style="width: 100%; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; position: relative; overflow: hidden;">
+                <div class="progress-fill" id="music-progress" style="height: 100%; background: #fff; width: 0%;"></div>
+            </div>
+        </div>
+        <div class="time-display" style="display: flex; justify-content: space-between; width: 100%; font-size: 0.75rem; opacity: 0.5;">
+            <span id="music-curr">0:00</span><span id="music-dur">0:00</span>
+        </div>
+    </div>
+    <div style="display: flex; gap: 40px; font-size: 2rem; align-items: center;">
+        <i class="fas fa-backward-step" style="cursor:pointer;" onclick="player.previousVideo()"></i>
+        <i class="fas fa-play-circle" style="font-size: 4rem; cursor:pointer;" onclick="togglePlay()" id="play-btn"></i>
+        <i class="fas fa-forward-step" style="cursor:pointer;" onclick="player.nextVideo()"></i>
+    </div>
+</div>

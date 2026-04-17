@@ -1,0 +1,6 @@
+{
+    "name": "Maps",
+    "description": "Khám phá thế giới và đánh dấu địa điểm.",
+    "icon_svg": "<svg viewBox='0 0 100 100'><defs><linearGradient id='map-grad' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' style='stop-color:#34c759'/><stop offset='100%' style='stop-color:#30d158'/></linearGradient></defs><rect width='100' height='100' rx='22' fill='url(#map-grad)'/><path d='M30 30L50 20L70 30V80L50 70L30 80V30Z' fill='none' stroke='white' stroke-width='6' stroke-linejoin='round'/><circle cx='50' cy='45' r='5' fill='white'/></svg>",
+    "category": "Utility"
+}

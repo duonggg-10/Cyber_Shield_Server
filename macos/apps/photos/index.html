@@ -1,0 +1,49 @@
+<div style="display:flex; flex-direction:column; height:100%; background:#000;">
+    <!-- Photos Header -->
+    <div style="display:flex; padding: 12px 20px; gap: 25px; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(15,15,15,0.8); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 10; align-items: center;">
+        <div id="btn-photo-library" class="photo-tab active" onclick="switchPhotoTab('library')" style="font-weight:700; color:var(--accent-blue); cursor:pointer; font-size:0.9rem;">Library</div>
+        <div id="btn-photo-albums" class="photo-tab" onclick="switchPhotoTab('albums')" style="opacity:0.6; cursor:pointer; font-size:0.9rem;">Albums</div>
+        <label for="upload-input" style="margin-left: auto; color:var(--accent-blue); cursor:pointer; font-size:0.9rem;"><i class="fas fa-plus"></i> Add</label>
+    </div>
+
+    <!-- Progress Bar -->
+    <div id="upload-progress-container" style="display:none; padding: 10px 24px; background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05);">
+        <div style="display:flex; justify-content:space-between; font-size:0.7rem; margin-bottom:6px; opacity:0.8;">
+            <span id="upload-status">Uploading...</span>
+            <span id="upload-pc">0%</span>
+        </div>
+        <div style="width:100%; height:3px; background:rgba(255,255,255,0.1); border-radius:10px; overflow:hidden;">
+            <div id="upload-bar" style="width:0%; height:100%; background:var(--accent-blue);"></div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div id="photos-content-main" style="flex:1; overflow-y:auto;">
+        <!-- Library View -->
+        <div id="photo-library-view">
+            <div class="photo-grid-container" id="photo-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 2px;">
+                <div style="padding:40px; text-align:center; opacity:0.3; width:100%; grid-column: 1/-1;">Loading library...</div>
+            </div>
+        </div>
+
+        <!-- Albums View -->
+        <div id="photo-albums-view" style="display:none; padding: 20px;">
+            <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:20px;">
+                <!-- Recent Album -->
+                <div class="album-card" onclick="switchPhotoTab('library')" style="cursor:pointer;">
+                    <div id="album-cover-recent" style="width:100%; aspect-ratio:1/1; border-radius:12px; background:#222; background-size:cover; background-position:center; margin-bottom:8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);"></div>
+                    <div style="font-weight:600; font-size:0.9rem;">Recents</div>
+                    <div id="album-count-recent" style="opacity:0.5; font-size:0.8rem;">0 items</div>
+                </div>
+                <!-- Videos Album -->
+                <div class="album-card" onclick="filterPhotosByType('video')" style="cursor:pointer;">
+                    <div id="album-cover-videos" style="width:100%; aspect-ratio:1/1; border-radius:12px; background:#222; display:flex; align-items:center; justify-content:center; margin-bottom:8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                        <i class="fas fa-video" style="font-size:2rem; opacity:0.3;"></i>
+                    </div>
+                    <div style="font-weight:600; font-size:0.9rem;">Videos</div>
+                    <div id="album-count-videos" style="opacity:0.5; font-size:0.8rem;">0 items</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
