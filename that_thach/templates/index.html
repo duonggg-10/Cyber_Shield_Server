@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍬 Thật hay Thách - GenZ 🍬</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="animate__animated animate__fadeInDown">
+            <h1 class="bounce-text">🍬 Thật hay Thách 🍬</h1>
+            <div class="mode-switch-container">
+                <span class="mode-label">Local</span>
+                <label class="switch">
+                    <input type="checkbox" id="ai-toggle">
+                    <span class="slider round"></span>
+                </label>
+                <span class="mode-label ai-glow">AI GenZ</span>
+            </div>
+        </header>
+
+        <!-- Player Input Section -->
+        <section id="setup-screen" class="card setup-card animate__animated animate__zoomIn">
+            <div class="card-header">
+                <i class="fas fa-users-beam fa-2x"></i>
+                <h3>Danh sách biệt đội</h3>
+            </div>
+            <p class="hint">Mỗi người một dòng, lầy lội lên nào!</p>
+            <textarea id="player-names" placeholder="Vương Miện&#10;Công Chúa Tuyết&#10;Hắc Công Tử..."></textarea>
+            <button id="start-game" class="btn-primary main-btn">
+                <span>VÀO VIỆC THÔI!</span>
+                <i class="fas fa-rocket"></i>
+            </button>
+        </section>
+
+        <!-- Game Section -->
+        <section id="game-screen" class="card game-card hidden animate__animated animate__fadeIn">
+            <div class="player-turn-container">
+                <p class="turn-label">Gương mặt vàng trong làng chịu phạt:</p>
+                <div class="player-name-wrapper">
+                    <h2 id="current-player-name">---</h2>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button id="btn-truth" class="btn-action btn-truth">
+                    <div class="btn-content">
+                        <i class="fas fa-comment-dots"></i>
+                        <span>THẬT</span>
+                    </div>
+                </button>
+                <button id="btn-dare" class="btn-action btn-dare">
+                    <div class="btn-content">
+                        <i class="fas fa-fire-alt"></i>
+                        <span>THÁCH</span>
+                    </div>
+                </button>
+            </div>
+            
+            <button id="back-to-setup" class="btn-text">
+                <i class="fas fa-edit"></i> Chỉnh lại danh sách
+            </button>
+        </section>
+    </div>
+
+    <!-- Overlay Loading AI -->
+    <div id="loading-overlay" class="overlay hidden">
+        <div class="loading-content">
+            <div class="spinner">
+                <div class="dot d1"></div>
+                <div class="dot d2"></div>
+                <div class="dot d3"></div>
+            </div>
+            <p id="loading-text">AI đang vắt óc suy nghĩ...</p>
+        </div>
+    </div>
+
+    <!-- Overlay Kết quả -->
+    <div id="result-overlay" class="overlay hidden">
+        <div class="result-card-container">
+            <div class="result-card animate__animated animate__backInUp">
+                <div class="result-header" id="result-header-bg">
+                    <h4 id="result-title">Kết quả</h4>
+                    <i class="fas fa-star floating-star"></i>
+                </div>
+                <div class="result-body">
+                    <p id="result-content">Nội dung câu hỏi sẽ hiện ở đây...</p>
+                </div>
+                <div class="result-footer">
+                    <button id="close-result" class="btn-secondary">
+                        <span>XONG! TIẾP NÀO</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Background Decoration -->
+    <div class="decor-elements">
+        <div class="shape s1"></div>
+        <div class="shape s2"></div>
+        <div class="shape s3"></div>
+        <div class="shape s4"></div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
